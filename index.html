@@ -642,8 +642,8 @@ input.has-unit { border-radius: 7px 0 0 7px; }
   padding: 20px 28px;
   margin-bottom: 24px;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
@@ -669,6 +669,44 @@ input.has-unit { border-radius: 7px 0 0 7px; }
 
 .project-banner input[type="text"]::placeholder { color: rgba(255,255,255,0.35); }
 .project-banner input[type="text"]:focus { border-color: var(--cyan); background: rgba(255,255,255,0.15); box-shadow: none; }
+
+/* Date field — styled to match project banner */
+.project-banner input[type="date"] {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  min-width: 170px;
+  cursor: pointer;
+  font-family: inherit;
+  color-scheme: dark;
+}
+.project-banner input[type="date"]:focus {
+  border-color: var(--cyan);
+  background: rgba(255,255,255,0.15);
+  outline: none;
+}
+.project-banner input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.7);
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+.date-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.date-wrap label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  font-weight: 700;
+}
 
 .project-details-row {
   display: flex;
@@ -767,12 +805,19 @@ input.has-unit { border-radius: 7px 0 0 7px; }
 
   <!-- ── PROJECT INFO ── -->
   <div class="project-banner">
-    <div style="width:100%;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-      <div style="flex:0 0 auto;">
-        <label style="font-size:11px;letter-spacing:2px;">PROJECT NAME</label>
-      </div>
-      <input type="text" id="projectName" placeholder="Project Name" style="flex:1;min-width:220px">
+    <!-- Project Name -->
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:5px;">
+      <label style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;">📋 Project Name</label>
+      <input type="text" id="projectName" placeholder="Enter project name..." style="font-size:18px;font-weight:600;">
     </div>
+
+    <!-- Date Picker -->
+    <div class="date-wrap">
+      <label>📅 Report Date</label>
+      <input type="date" id="projectDate">
+    </div>
+
+    <!-- Details Row -->
     <div class="project-details-row">
       <div class="field">
         <label>Main Contractor</label>
@@ -2177,7 +2222,12 @@ function generatePDF() {
   const consultantName = document.getElementById('consultantName').value || '—';
   const subContractor  = document.getElementById('subContractor').value  || '—';
   const location       = document.getElementById('projectLocation').value || '—';
-  const date = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+  // Date — use manual entry if filled, otherwise today's date
+  const dateInput = document.getElementById('projectDate').value;
+  const date = dateInput
+    ? new Date(dateInput).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+    : new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
 
   const rS = results.summer || {};
   const rW = results.winter || {};
@@ -2214,6 +2264,7 @@ function generatePDF() {
   H.push('<!DOCTYPE html><html><head><meta charset="UTF-8">');
   H.push('<title>' + projectName + ' — Heat Cool Calculation</title>');
   H.push('<style>');
+  H.push('@page{size:A4;margin:10mm 12mm 10mm 12mm;margin-header:0;margin-footer:0}');
   H.push('@page{size:A4;margin:10mm 12mm 10mm 12mm}');
   H.push('*{box-sizing:border-box;margin:0;padding:0}');
   H.push('body{font-family:Arial,sans-serif;font-size:7.8pt;color:#1a2b3c;background:white;line-height:1.3}');
@@ -2239,12 +2290,13 @@ function generatePDF() {
   H.push('.blk{margin-bottom:5px}');
   H.push('.snote{background:#fffbe6;border:1px solid #e8b800;padding:3px 7px;font-size:6.8pt;color:#7a5c00;margin-bottom:5px}');
   H.push('.ftr{background:#0d2137;color:rgba(255,255,255,.45);padding:4px 10px;display:flex;justify-content:space-between;font-size:6.5pt;margin-top:5px}');
-  H.push('@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}}');
+  H.push('@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}@page{margin:10mm 12mm 10mm 12mm;size:A4}}');
   H.push('</style></head><body>');
 
-  H.push('<div class="no-print" style="background:#0d2137;color:white;text-align:center;padding:8px;font-family:Arial;font-size:12px;">');
-  H.push('To save as PDF: Press Ctrl+P (Win) or Cmd+P (Mac) and choose Save as PDF');
-  H.push('&nbsp;&nbsp;<button onclick="window.print()" style="background:#e05c1a;color:white;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-weight:700;margin-left:8px">Print / Save PDF</button></div>');
+  H.push('<div class="no-print" style="background:#0d2137;color:white;text-align:center;padding:10px;font-family:Arial;font-size:12px;line-height:1.8;">');
+  H.push('<strong>To save as PDF without the URL showing:</strong><br>');
+  H.push('Press <strong>Ctrl+P</strong> (Windows) or <strong>Cmd+P</strong> (Mac) &rarr; Choose <strong>"Save as PDF"</strong> &rarr; Click <strong>"More settings"</strong> &rarr; Uncheck <strong>"Headers and footers"</strong> &rarr; Save');
+  H.push('&nbsp;&nbsp;<button onclick="window.print()" style="background:#e05c1a;color:white;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:700;font-size:13px;margin-left:12px">🖨 Print / Save PDF</button></div>');
 
   // Header
   H.push('<div class="hdr"><div class="hdr-left"><h1>HEATER &#8211; CHILLER SELECTION</h1><div class="sub">SWIMMING POOL HEAT-COOL PUMP CALCULATION</div></div>');
@@ -2350,6 +2402,16 @@ updatePoolCalc();
 calcDeltas();
 updateWindFactors();
 updateSolarCalc();
+
+// Set today's date as default in the date field
+(function() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const el = document.getElementById('projectDate');
+  if (el) el.value = yyyy + '-' + mm + '-' + dd;
+})();
 
 document.getElementById('solarIrr').addEventListener('input', () => updateSolarCalc());
 document.getElementById('solarHrs').addEventListener('input', () => updateSolarCalc());
