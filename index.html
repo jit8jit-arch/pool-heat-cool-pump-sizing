@@ -902,16 +902,45 @@ input.has-unit { border-radius: 7px 0 0 7px; }
       </div>
     </div>
 
-    <!-- Computed Area / Volume -->
+    <!-- Computed Area / Volume — auto-calculated, manual override allowed -->
     <div class="grid-2" style="margin-top:12px">
-      <div style="background:var(--surface);border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Pool Area (A)</div>
-        <div style="font-family:'Rajdhani';font-size:28px;font-weight:700;color:var(--navy)" id="areaDisplay">50.00 m²</div>
+
+      <!-- Pool Area -->
+      <div style="background:var(--surface);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">📐 Pool Surface Area (A)</div>
+          <button id="areaLockBtn" onclick="toggleAreaManual()" title="Toggle manual entry"
+            style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;font-weight:700;letter-spacing:0.5px;">
+            🔒 AUTO
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="areaManual" step="0.1" min="1"
+            style="font-family:'Rajdhani';font-size:28px;font-weight:700;color:var(--navy);border:2px solid var(--border);border-radius:6px;padding:4px 10px;width:100%;background:#e8eef4;"
+            readonly oninput="onManualArea()">
+          <span style="font-size:14px;font-weight:700;color:var(--muted);white-space:nowrap;">m²</span>
+        </div>
+        <div id="areaAutoNote" style="font-size:11px;color:var(--muted);margin-top:4px;">Auto-calculated from dimensions</div>
       </div>
-      <div style="background:var(--navy);border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5)">Pool Volume (V)</div>
-        <div style="font-family:'Rajdhani';font-size:28px;font-weight:700;color:white" id="volDisplay">75,000 L</div>
+
+      <!-- Pool Volume -->
+      <div style="background:var(--navy);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5)">💧 Pool Volume (V)</div>
+          <button id="volLockBtn" onclick="toggleVolManual()" title="Toggle manual entry"
+            style="font-size:10px;padding:3px 10px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);cursor:pointer;font-weight:700;letter-spacing:0.5px;">
+            🔒 AUTO
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="volManual" step="0.1" min="1"
+            style="font-family:'Rajdhani';font-size:28px;font-weight:700;color:white;border:2px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 10px;width:100%;background:rgba(255,255,255,0.08);"
+            readonly oninput="onManualVol()">
+          <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);white-space:nowrap;">m³</span>
+        </div>
+        <div id="volAutoNote" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Auto-calculated from Area × Avg Depth</div>
       </div>
+
     </div>
   </div>
 
@@ -1209,11 +1238,11 @@ input.has-unit { border-radius: 7px 0 0 7px; }
       <div class="panel-title">📋 Summary</div>
       <div class="grid-3">
         <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Pool Volume</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Pool Volume (m³)</span>
           <span class="result-value val-green" id="sum_vol">—</span>
         </div>
         <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Pool Area</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Pool Area (m²)</span>
           <span class="result-value val-green" id="sum_area">—</span>
         </div>
         <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:4px">
@@ -1376,24 +1405,133 @@ const windData = {
 let selWind = 10;
 
 // ── POOL CALC ──
+// ── Area & Volume manual override state ──
+let areaManualMode = false;
+let volManualMode  = false;
+
+function toggleAreaManual() {
+  areaManualMode = !areaManualMode;
+  const inp  = document.getElementById('areaManual');
+  const btn  = document.getElementById('areaLockBtn');
+  const note = document.getElementById('areaAutoNote');
+  if (areaManualMode) {
+    inp.readOnly = false;
+    inp.style.background = '#fff';
+    inp.style.borderColor = 'var(--cyan)';
+    inp.style.color = 'var(--navy)';
+    btn.textContent = '✏️ MANUAL';
+    btn.style.borderColor = 'var(--cyan)';
+    btn.style.color = 'var(--cyan)';
+    note.textContent = 'Manual entry — auto-calc paused';
+    note.style.color = 'var(--cyan)';
+    inp.focus();
+  } else {
+    inp.readOnly = true;
+    inp.style.background = '#e8eef4';
+    inp.style.borderColor = 'var(--border)';
+    inp.style.color = 'var(--navy)';
+    btn.textContent = '🔒 AUTO';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--muted)';
+    note.textContent = 'Auto-calculated from dimensions';
+    note.style.color = 'var(--muted)';
+    updatePoolCalc(); // recalculate from dimensions
+  }
+}
+
+function toggleVolManual() {
+  volManualMode = !volManualMode;
+  const inp  = document.getElementById('volManual');
+  const btn  = document.getElementById('volLockBtn');
+  const note = document.getElementById('volAutoNote');
+  if (volManualMode) {
+    inp.readOnly = false;
+    inp.style.background = 'rgba(255,255,255,0.18)';
+    inp.style.borderColor = 'var(--cyan)';
+    btn.textContent = '✏️ MANUAL';
+    btn.style.borderColor = 'var(--cyan)';
+    btn.style.color = 'var(--cyan)';
+    note.textContent = 'Manual entry — auto-calc paused';
+    note.style.color = 'rgba(0,200,255,0.8)';
+    inp.focus();
+  } else {
+    inp.readOnly = true;
+    inp.style.background = 'rgba(255,255,255,0.08)';
+    inp.style.borderColor = 'rgba(255,255,255,0.25)';
+    btn.textContent = '🔒 AUTO';
+    btn.style.borderColor = 'rgba(255,255,255,0.3)';
+    btn.style.color = 'rgba(255,255,255,0.7)';
+    note.textContent = 'Auto-calculated from Area × Avg Depth';
+    note.style.color = 'rgba(255,255,255,0.4)';
+    updatePoolCalc(); // recalculate
+  }
+}
+
+function onManualArea() {
+  // When user types in area manually, auto-update volume unless volume is also manual
+  if (!volManualMode) {
+    const area = parseFloat(document.getElementById('areaManual').value) || 0;
+    const Ds = parseFloat(document.getElementById('depthS').value) || 0;
+    const Dd = parseFloat(document.getElementById('depthD').value) || 0;
+    const Davg = (Ds + Dd) / 2;
+    const volM3 = area * Davg;
+    document.getElementById('volManual').value = volM3.toFixed(2);
+  }
+}
+
+function onManualVol() {
+  // Nothing extra needed — volume is now the manual value
+}
+
 function updatePoolCalc() {
   const type = document.getElementById('poolType').value;
-  const L = parseFloat(document.getElementById('poolL').value) || 0;
-  const W = parseFloat(document.getElementById('poolW').value) || 0;
+  const L  = parseFloat(document.getElementById('poolL').value)  || 0;
+  const W  = parseFloat(document.getElementById('poolW').value)  || 0;
   const Ds = parseFloat(document.getElementById('depthS').value) || 0;
   const Dd = parseFloat(document.getElementById('depthD').value) || 0;
   const Davg = (Ds + Dd) / 2;
   document.getElementById('depthAvg').value = Davg.toFixed(2);
 
-  let area = 0;
-  if (type === 'rect') { area = L * W; document.getElementById('lengthField').style.display=''; document.getElementById('widthField').style.display=''; document.getElementById('customAreaField').style.display='none'; }
-  else if (type === 'oval') { area = Math.PI * (L/2) * (W/2); document.getElementById('lengthField').style.display=''; document.getElementById('widthField').style.display=''; document.getElementById('customAreaField').style.display='none'; }
-  else if (type === 'circular') { area = Math.PI * (L/2) * (L/2); document.getElementById('widthField').style.display='none'; document.getElementById('customAreaField').style.display='none'; }
-  else { document.getElementById('customAreaField').style.display=''; area = parseFloat(document.getElementById('customArea').value) || 50; document.getElementById('lengthField').style.display='none'; document.getElementById('widthField').style.display='none'; }
+  // Show/hide shape fields
+  if (type === 'rect') {
+    document.getElementById('lengthField').style.display = '';
+    document.getElementById('widthField').style.display  = '';
+    document.getElementById('customAreaField').style.display = 'none';
+  } else if (type === 'oval') {
+    document.getElementById('lengthField').style.display = '';
+    document.getElementById('widthField').style.display  = '';
+    document.getElementById('customAreaField').style.display = 'none';
+  } else if (type === 'circular') {
+    document.getElementById('lengthField').style.display = '';
+    document.getElementById('widthField').style.display  = 'none';
+    document.getElementById('customAreaField').style.display = 'none';
+  } else {
+    document.getElementById('lengthField').style.display = 'none';
+    document.getElementById('widthField').style.display  = 'none';
+    document.getElementById('customAreaField').style.display = '';
+  }
 
-  const vol = area * Davg * 1000; // litres
-  document.getElementById('areaDisplay').textContent = area.toFixed(2) + ' m²';
-  document.getElementById('volDisplay').textContent = Math.round(vol).toLocaleString() + ' L';
+  // Calculate area from dimensions (only if not in manual mode)
+  let autoArea = 0;
+  if (type === 'rect')     autoArea = L * W;
+  else if (type === 'oval')autoArea = Math.PI * (L/2) * (W/2);
+  else if (type === 'circular') autoArea = Math.PI * (L/2) * (L/2);
+  else autoArea = parseFloat(document.getElementById('customArea').value) || 50;
+
+  if (!areaManualMode) {
+    document.getElementById('areaManual').value = autoArea.toFixed(2);
+  }
+
+  // Use whichever area is active
+  const area = areaManualMode
+    ? (parseFloat(document.getElementById('areaManual').value) || autoArea)
+    : autoArea;
+
+  // Calculate volume (only if not in manual mode)
+  const autoVolM3 = area * Davg;
+  if (!volManualMode) {
+    document.getElementById('volManual').value = autoVolM3.toFixed(2);
+  }
 
   updateSolarCalc(area);
 }
@@ -1456,19 +1594,28 @@ function updateSolarCalc(area) {
 
 // ── MAIN CALCULATION (FLUIDRA METHOD) ──
 function runCalculation() {
-  // Get pool
+  // Get pool — use manual override values if set, otherwise auto-calculated
   const type = document.getElementById('poolType').value;
   const L = parseFloat(document.getElementById('poolL').value) || 0;
   const W = parseFloat(document.getElementById('poolW').value) || 0;
   const Ds = parseFloat(document.getElementById('depthS').value) || 0;
   const Dd = parseFloat(document.getElementById('depthD').value) || 0;
   const Davg = (Ds + Dd) / 2;
-  let area;
-  if (type === 'rect') area = L * W;
-  else if (type === 'oval') area = Math.PI * (L/2) * (W/2);
-  else if (type === 'circular') area = Math.PI * (L/2) * (L/2);
-  else area = parseFloat(document.getElementById('customArea').value) || 50;
-  const volM3 = area * Davg;
+
+  // Area — use manual if in manual mode, otherwise calculate
+  let area = parseFloat(document.getElementById('areaManual').value) || 0;
+  if (!area || !areaManualMode) {
+    if (type === 'rect') area = L * W;
+    else if (type === 'oval') area = Math.PI * (L/2) * (W/2);
+    else if (type === 'circular') area = Math.PI * (L/2) * (L/2);
+    else area = parseFloat(document.getElementById('customArea').value) || 50;
+  }
+
+  // Volume — use manual if in manual mode, otherwise calculate from area × avg depth
+  let volM3 = parseFloat(document.getElementById('volManual').value) || 0;
+  if (!volM3 || !volManualMode) {
+    volM3 = area * Davg;
+  }
   const volL = volM3 * 1000;
 
   // Wind & enclosure
@@ -1577,7 +1724,7 @@ function renderResults(season) {
   document.getElementById('qcTotal_val').innerHTML = r.qcTotal.toFixed(2) + '<span class="unit"> kW</span>';
   document.getElementById('coolRequired').textContent = r.qcTotal.toFixed(2);
 
-  document.getElementById('sum_vol').textContent = Math.round(results.volL).toLocaleString() + ' L';
+  document.getElementById('sum_vol').textContent = results.volM3.toFixed(2) + ' m³';
   document.getElementById('sum_area').textContent = results.area.toFixed(2) + ' m²';
 
   updateUnitSufficiency();
@@ -2319,8 +2466,7 @@ function generatePDF() {
   H.push('<table><tr><th style="width:65%">Parameter</th><th>Value</th><th>Unit</th></tr>');
   H.push('<tr><td>Pool Area (A)</td><td style="font-weight:700;color:#0d2137">' + n2(results.area) + '</td><td>m&#178;</td></tr>');
   H.push('<tr><td>Avg Depth (Ds+Dd)/2</td><td style="font-weight:700;color:#0d2137">' + avgDepth.toFixed(2) + '</td><td>m</td></tr>');
-  H.push('<tr><td>Pool Volume (V)</td><td style="font-weight:700;color:#0d2137">' + n2(results.volM3) + ' m&#179;</td><td>&#8212;</td></tr>');
-  H.push('<tr><td>&nbsp;(' + (results.volL ? Math.round(results.volL).toLocaleString() : '—') + ' Litres)</td><td></td><td></td></tr>');
+  H.push('<tr><td>Pool Volume (V)</td><td style="font-weight:700;color:#0d2137">' + parseFloat(results.volM3).toFixed(2) + '</td><td>m&#179;</td></tr>');
   H.push('<tr><td>Wind Speed</td><td style="font-weight:700;color:#0d2137">' + windLabel + '</td><td>&#8212;</td></tr>');
   H.push('<tr><td>Wind Multiplier (w)</td><td style="font-weight:700;color:#0d2137">' + windData[selWind].h + '</td><td>&#8212;</td></tr>');
   H.push('</table></div>');
