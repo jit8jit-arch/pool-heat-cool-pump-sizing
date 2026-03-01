@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AquaCalc — Pool Heat Cool Sizing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════
+   iOS DESIGN SYSTEM
+   ═══════════════════════════════════════════ */
+:root {
+  /* iOS Colors */
+  --ios-blue:    #007AFF;
+  --ios-cyan:    #32ADE6;
+  --ios-teal:    #30B0C7;
+  --ios-orange:  #FF9F0A;
+  --ios-red:     #FF3B30;
+  --ios-green:   #34C759;
+  --ios-indigo:  #5856D6;
+  --ios-pink:    #FF2D55;
+  --ios-purple:  #AF52DE;
+  --ios-yellow:  #FFD60A;
+
+  --heat:  #FF6B35;
+  --cool:  #007AFF;
+
+  /* System backgrounds */
+  --sys-bg:         #F2F2F7;
+  --sys-bg2:        #FFFFFF;
+  --sys-bg3:        #F2F2F7;
+  --grouped-bg:     #F2F2F7;
+  --grouped-card:   #FFFFFF;
+
+  /* Labels */
+  --label:          #000000;
+  --label2:         rgba(60,60,67,0.6);
+  --label3:         rgba(60,60,67,0.3);
+  --label4:         rgba(60,60,67,0.18);
+
+  /* Separator */
+  --sep:            rgba(60,60,67,0.29);
+  --sep-opaque:     #C6C6C8;
+
+  /* Fill */
+  --fill:           rgba(120,120,128,0.2);
+  --fill2:          rgba(120,120,128,0.16);
+  --fill3:          rgba(120,120,128,0.12);
+
+  /* Navy for branding */
+  --navy:   #0D2137;
+  --navy2:  #163352;
+
+  --radius-card:    16px;
+  --radius-inset:   10px;
+  --radius-pill:    999px;
+
+  --shadow-card:    0 2px 16px rgba(0,0,0,0.08);
+  --shadow-float:   0 8px 32px rgba(0,0,0,0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sys-bg:       #000000;
+    --sys-bg2:      #1C1C1E;
+    --sys-bg3:      #2C2C2E;
+    --grouped-bg:   #000000;
+    --grouped-card: #1C1C1E;
+    --label:        #FFFFFF;
+    --label2:       rgba(235,235,245,0.6);
+    --label3:       rgba(235,235,245,0.3);
+    --label4:       rgba(235,235,245,0.18);
+    --sep:          rgba(84,84,88,0.65);
+    --sep-opaque:   #38383A;
+    --fill:         rgba(118,118,128,0.36);
+    --fill2:        rgba(118,118,128,0.32);
+    --fill3:        rgba(118,118,128,0.24);
+    --shadow-card:  0 2px 16px rgba(0,0,0,0.4);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--grouped-bg);
+  color: var(--label);
+  font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  line-height: 1.47;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════
+   NAVIGATION BAR (iOS style)
+   ═══════════════════════════ */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(242,242,247,0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--sep);
+  padding: env(safe-area-inset-top, 0) 0 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-bar { background: rgba(28,28,30,0.82); }
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+}
+
+.nav-logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--label);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-logo .icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #007AFF, #30B0C7);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,122,255,0.35);
+}
+
+.nav-logo .wordmark { font-size: 17px; font-weight: 600; }
+.nav-logo .wordmark span { color: var(--ios-blue); }
+
+.nav-action {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.btn-nav {
+  background: var(--ios-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity 0.15s;
+  letter-spacing: -0.2px;
+}
+.btn-nav:active { opacity: 0.75; }
+.btn-nav.secondary { background: var(--fill2); color: var(--ios-blue); }
+
+/* ═══════════════════════════
+   SCROLL TABS (section nav)
+   ═══════════════════════════ */
+.section-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 8px 16px;
+  background: #1a2d42;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  position: sticky;
+  top: 52px;
+  z-index: 190;
+}
+.section-tabs::-webkit-scrollbar { display: none; }
+
+.stab-pill {
+  flex-shrink: 0;
+  padding: 7px 15px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  letter-spacing: -0.1px;
+}
+.stab-pill:hover { background: rgba(255,255,255,0.18); color: white; }
+.stab-pill.active {
+  background: var(--ios-blue);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(0,122,255,0.45);
+}
+
+/* ═══════════════════════════
+   MAIN LAYOUT
+   ═══════════════════════════ */
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px 80px;
+}
+
+/* ═══════════════════════════
+   SECTION HEADERS
+   ═══════════════════════════ */
+.section-header {
+  padding: 24px 4px 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.section-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.icon-blue   { background: rgba(0,122,255,0.15); }
+.icon-orange { background: rgba(255,159,10,0.15); }
+.icon-teal   { background: rgba(48,176,199,0.15); }
+.icon-yellow { background: rgba(255,214,10,0.15); }
+.icon-green  { background: rgba(52,199,89,0.15); }
+.icon-red    { background: rgba(255,59,48,0.15); }
+.icon-purple { background: rgba(175,82,222,0.15); }
+
+.section-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--label);
+}
+
+/* ═══════════════════════════
+   CARDS
+   ═══════════════════════════ */
+.card {
+  background: var(--grouped-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.card-row {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 0.5px solid var(--sep);
+  min-height: 44px;
+}
+.card-row:last-child { border-bottom: none; }
+
+.row-label {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--label);
+  flex: 1;
+  min-width: 0;
+}
+.row-label small {
+  display: block;
+  font-size: 12px;
+  color: var(--label2);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+.row-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════
+   INPUTS (iOS style)
+   ═══════════════════════════ */
+.ios-input {
+  background: var(--fill3);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-inset);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--label);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100px;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.ios-input::-webkit-inner-spin-button,
+.ios-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.ios-input:focus {
+  border-color: var(--ios-blue);
+  background: var(--grouped-card);
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+}
+.ios-input.wide { width: 160px; }
+.ios-input.full  { width: 100%; text-align: left; }
+.ios-input.readonly {
+  color: var(--label2);
+  background: var(--fill);
+  border-color: transparent;
+}
+
+.unit-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label3);
+  white-space: nowrap;
+}
+
+/* iOS Select */
+.ios-select {
+  background: var(--fill3);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-inset);
+  padding: 8px 28px 8px 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--label);
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23007AFF' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  max-width: 200px;
+  color-scheme: light dark;
+}
+.ios-select option {
+  background: #1C1C1E;
+  color: #FFFFFF;
+}
+@media (prefers-color-scheme: light) {
+  .ios-select option {
+    background: #FFFFFF;
+    color: #000000;
+  }
+}
+.ios-select:focus { border-color: var(--ios-blue); }
+
+/* ═══════════════════════════
+   TOGGLES (iOS switch)
+   ═══════════════════════════ */
+.ios-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 51px; height: 31px;
+  background: #E9E9EA;
+  border-radius: 16px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .ios-toggle { background: #39393D; }
+}
+.ios-toggle:checked { background: #34C759; }
+.ios-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 27px; height: 27px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.ios-toggle:checked::after { transform: translateX(20px); }
+
+/* ═══════════════════════════
+   PROJECT BANNER
+   ═══════════════════════════ */
+.project-card {
+  background: linear-gradient(135deg, #0A1628 0%, #0D2B5E 100%);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.project-card .ios-input {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-color: transparent;
+  width: 100%;
+  text-align: left;
+  font-size: 17px;
+  font-weight: 600;
+}
+.project-card .ios-input::placeholder { color: rgba(255,255,255,0.3); }
+.project-card .ios-input:focus {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(0,122,255,0.7);
+  box-shadow: none;
+}
+.project-card .ios-input.small {
+  font-size: 14px;
+  font-weight: 400;
+  padding: 7px 10px;
+}
+.project-card label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  display: block;
+  margin-bottom: 5px;
+}
+.project-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+@media (max-width: 480px) {
+  .project-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════
+   COMPUTED BOXES (Area & Vol)
+   ═══════════════════════════ */
+.computed-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+.computed-box {
+  border-radius: var(--radius-inset);
+  padding: 14px 12px 12px;
+}
+.computed-box.light { background: var(--fill3); border: 1.5px solid var(--sep); }
+.computed-box.dark  { background: linear-gradient(135deg, #0D2137, #163352); border: 1.5px solid rgba(255,255,255,0.08); }
+.computed-box .cb-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--label3); margin-bottom: 8px;
+}
+.computed-box.dark .cb-title { color: rgba(255,255,255,0.45); }
+
+/* AUTO / MANUAL dual button */
+.am-strip {
+  display: flex; gap: 5px; margin-bottom: 10px;
+}
+.am-btn {
+  flex: 1; padding: 5px 4px; border-radius: 7px;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  cursor: pointer; border: 1.5px solid var(--sep);
+  background: transparent; color: var(--label3);
+  transition: all 0.18s; text-align: center; letter-spacing: 0.2px;
+}
+.am-btn.am-auto-active  { background: var(--ios-green); color: white; border-color: transparent; box-shadow: 0 1px 6px rgba(52,199,89,0.4); }
+.am-btn.am-manual-active{ background: var(--ios-blue);  color: white; border-color: transparent; box-shadow: 0 1px 6px rgba(0,122,255,0.4); }
+.dark-strip .am-btn     { border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.4); }
+
+/* Value display */
+.cb-val {
+  font-size: 32px; font-weight: 800; letter-spacing: -1.5px;
+  line-height: 1; text-align: center; color: var(--label);
+  padding: 4px 0;
+}
+.computed-box.dark .cb-val { color: white; }
+.cb-unit { font-size: 13px; font-weight: 500; color: var(--label3); text-align: center; margin-top: 2px; }
+.computed-box.dark .cb-unit { color: rgba(255,255,255,0.4); }
+.cb-note {
+  font-size: 11px; color: var(--label3); text-align: center;
+  margin-top: 6px; padding: 3px 6px; border-radius: 5px;
+  background: var(--fill2);
+}
+.computed-box.dark .cb-note { color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.07); }
+.cb-note.override { color: var(--ios-blue) !important; background: rgba(0,122,255,0.12) !important; }
+.computed-box.dark .cb-note.override { color: #32ADE6 !important; background: rgba(50,173,230,0.15) !important; }
+
+/* Manual input field (shown when manual active) */
+.cb-manual-wrap { display: none; }
+.cb-manual-wrap.show { display: block; }
+.cb-manual-inp {
+  width: 100%; text-align: center; background: transparent;
+  border: none; border-bottom: 2px solid var(--ios-blue);
+  font-size: 30px; font-weight: 800; letter-spacing: -1px;
+  color: var(--ios-blue); outline: none; padding: 4px 0;
+  font-family: inherit;
+}
+.computed-box.dark .cb-manual-inp { color: #32ADE6; border-bottom-color: #32ADE6; }
+
+/* ═══════════════════════════
+   SIDE-BY-SIDE RESULTS
+   ═══════════════════════════ */
+.results-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+@media (max-width: 600px) {
+  .results-cols { grid-template-columns: 1fr; }
+}
+
+.season-col-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px 12px 0 0;
+  font-size: 13px; font-weight: 700; letter-spacing: -0.2px;
+  border-bottom: none;
+}
+.season-col-header.summer { background: linear-gradient(135deg, #FF6B35, #FF9F0A); color: white; }
+.season-col-header.winter { background: linear-gradient(135deg, #0a3060, #007AFF); color: white; }
+
+.season-col {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--sep);
+  background: var(--grouped-card);
+}
+.season-col.summer { border-color: rgba(255,107,53,0.3); }
+.season-col.winter { border-color: rgba(0,122,255,0.3); }
+
+.scol-block {
+  padding: 8px 12px 4px;
+  border-top: 0.5px solid var(--sep);
+}
+.scol-block:first-of-type { border-top: none; }
+.scol-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--label3); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.scol-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 4px 0; gap: 6px;
+}
+.scol-lbl { font-size: 12px; color: var(--label2); flex: 1; min-width: 0; }
+.scol-val { font-size: 14px; font-weight: 700; white-space: nowrap; letter-spacing: -0.3px; }
+.scol-row.total-row {
+  background: var(--fill3); border-radius: 8px;
+  padding: 6px 8px; margin-top: 4px;
+}
+.scol-row.total-row .scol-lbl { font-weight: 700; color: var(--label); font-size: 12px; }
+.scol-row.total-row .scol-val { font-size: 17px; }
+
+.scol-hero {
+  margin: 8px 10px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.summer .scol-hero.heat-hero { background: linear-gradient(135deg, #8B2500, #FF6B35); }
+.winter .scol-hero.heat-hero { background: linear-gradient(135deg, #003060, #007AFF); }
+.summer .scol-hero.cool-hero { background: linear-gradient(135deg, #003060, #007AFF); }
+.winter .scol-hero.cool-hero { background: linear-gradient(135deg, #1a3a0a, #34C759); }
+.scol-hero .sh-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+.scol-hero .sh-num { font-size: 28px; font-weight: 800; color: white; letter-spacing: -1.5px; line-height: 1; }
+.scol-hero .sh-sub { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+/* Governing load summary */
+.governing-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+}
+.governing-chip {
+  border-radius: var(--radius-inset); padding: 14px; text-align: center;
+  border: 2px solid transparent;
+}
+.governing-chip.heat { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.25); }
+.governing-chip.cool { background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.25); }
+.gc-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--label3); margin-bottom: 4px; }
+.gc-val { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.gc-heat .gc-val { color: #FF6B35; }
+.gc-cool .gc-val { color: var(--ios-blue); }
+.gc-sub { font-size: 11px; color: var(--label3); margin-top: 4px; }
+
+/* ═══════════════════════════
+   TEMP TABLE
+   ═══════════════════════════ */
+.temp-table-wrap { overflow-x: auto; padding: 0 16px 16px; }
+.temp-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  font-size: 14px;
+}
+.temp-table th {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: center;
+  color: var(--label2);
+  border-bottom: 0.5px solid var(--sep);
+}
+.temp-table th:first-child { text-align: left; }
+.temp-table td {
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--sep);
+  text-align: center;
+  vertical-align: middle;
+}
+.temp-table td:first-child { text-align: left; font-size: 14px; }
+.temp-table tr:last-child td { border-bottom: none; }
+.temp-table tr.computed td { background: var(--fill3); }
+.temp-table .ios-input { width: 70px; }
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-summer { background: rgba(255,107,53,0.15); color: #FF6B35; }
+.badge-winter { background: rgba(0,122,255,0.12); color: var(--ios-blue); }
+.badge-auto   { background: rgba(52,199,89,0.15); color: var(--ios-green); }
+
+/* ═══════════════════════════
+   WIND TABLE
+   ═══════════════════════════ */
+.wind-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wind-table th {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 8px 12px; text-align: center; color: var(--label2);
+  border-bottom: 0.5px solid var(--sep);
+}
+.wind-table td {
+  padding: 10px 12px; text-align: center; color: var(--label2);
+  border-bottom: 0.5px solid var(--sep); cursor: pointer; transition: background 0.15s;
+}
+.wind-table tbody tr:last-child td { border-bottom: none; }
+.wind-table tbody tr.selected-wind td {
+  background: rgba(0,122,255,0.08);
+  color: var(--ios-blue);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════
+   FACTOR CHIPS
+   ═══════════════════════════ */
+.factor-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; padding: 12px 16px 16px;
+}
+.factor-chip {
+  background: var(--fill3);
+  border-radius: var(--radius-inset);
+  padding: 12px;
+  text-align: center;
+}
+.factor-chip .lbl {
+  font-size: 11px; font-weight: 600; color: var(--label3);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.factor-chip .val {
+  font-size: 26px; font-weight: 700; letter-spacing: -1px;
+  line-height: 1;
+}
+.heat-val { color: #FF6B35; }
+.cool-val { color: var(--ios-blue); }
+.green-val { color: var(--ios-green); }
+
+/* ═══════════════════════════
+   CALCULATE BUTTON
+   ═══════════════════════════ */
+.calc-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, #0A1628, #007AFF);
+  color: white;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  cursor: pointer;
+  margin: 20px 0;
+  box-shadow: 0 4px 20px rgba(0,122,255,0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.calc-btn:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(0,122,255,0.2); }
+.calc-btn.secondary {
+  background: linear-gradient(135deg, #0A1628, #30B0C7);
+  font-size: 15px;
+  padding: 13px;
+  margin: 12px 0 0;
+  box-shadow: 0 4px 16px rgba(48,176,199,0.3);
+}
+
+/* ═══════════════════════════
+   RESULTS
+   ═══════════════════════════ */
+.results-section {
+  display: none;
+  animation: slideIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
+}
+.results-section.show { display: block; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Season picker */
+.season-picker {
+  background: var(--fill2);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  display: flex;
+  margin-bottom: 14px;
+  width: fit-content;
+}
+.season-tab {
+  padding: 8px 22px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  color: var(--label2);
+}
+.season-tab.summer.active {
+  background: linear-gradient(135deg, #FF6B35, #FF9F0A);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255,107,53,0.4);
+}
+.season-tab.winter.active {
+  background: var(--ios-blue);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,122,255,0.4);
+}
+
+/* Result panels */
+.result-panel {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.panel-header {
+  padding: 14px 16px 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-header h3 {
+  font-size: 15px; font-weight: 700; letter-spacing: -0.3px;
+}
+.panel-heat .panel-header { background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(255,159,10,0.08)); }
+.panel-cool .panel-header { background: linear-gradient(135deg, rgba(0,122,255,0.10), rgba(48,176,199,0.07)); }
+.panel-heat { background: var(--grouped-card); border: 1.5px solid rgba(255,107,53,0.2); }
+.panel-cool { background: var(--grouped-card); border: 1.5px solid rgba(0,122,255,0.18); }
+.panel-heat h3 { color: #FF6B35; }
+.panel-cool h3 { color: var(--ios-blue); }
+
+.result-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 0.5px solid var(--sep);
+  gap: 12px;
+}
+.result-label { font-size: 14px; color: var(--label); flex: 1; }
+.result-formula { font-size: 11px; color: var(--label3); font-style: italic; text-align: center; flex: 1; display: none; }
+.result-value { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
+.result-value small { font-size: 13px; font-weight: 500; margin-left: 3px; color: var(--label3); }
+
+.total-result-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--fill3);
+  border-top: 1px solid var(--sep);
+}
+.total-result-row .tlabel { font-size: 15px; font-weight: 700; color: var(--label); }
+.total-result-row .tval  { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+
+/* Big KW display */
+.kw-hero {
+  margin: 0 16px 16px;
+  border-radius: var(--radius-inset);
+  padding: 16px;
+  text-align: center;
+}
+.panel-heat .kw-hero { background: linear-gradient(135deg, #8B2500, #FF6B35); }
+.panel-cool .kw-hero { background: linear-gradient(135deg, #003060, #007AFF); }
+.kw-hero .kw-lbl { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+.kw-hero .kw-num { font-size: 44px; font-weight: 800; color: white; letter-spacing: -2px; line-height: 1; }
+.kw-hero .kw-sub { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+/* Summary */
+.summary-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; margin-bottom: 14px;
+}
+.summary-chip {
+  background: var(--fill3);
+  border-radius: var(--radius-inset);
+  padding: 12px;
+  text-align: center;
+}
+.summary-chip .slbl { font-size: 11px; font-weight: 600; color: var(--label3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.summary-chip .sval { font-size: 20px; font-weight: 700; color: var(--ios-green); letter-spacing: -0.5px; }
+
+/* ═══════════════════════════
+   BRAND SELECTOR
+   ═══════════════════════════ */
+.brand-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 12px 16px;
+}
+@media (min-width: 600px) { .brand-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.brand-pill {
+  padding: 10px 12px;
+  border-radius: var(--radius-inset);
+  border: 1.5px solid var(--sep);
+  background: var(--fill3);
+  color: var(--label);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+.brand-pill:active { opacity: 0.7; }
+.brand-pill.active {
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Qty buttons */
+.qty-row {
+  display: flex; gap: 8px; padding: 8px 16px 16px;
+}
+.qty-btn {
+  flex: 1; padding: 10px;
+  border-radius: var(--radius-inset);
+  border: 1.5px solid var(--sep);
+  background: var(--fill3);
+  color: var(--label2);
+  font-family: inherit;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: all 0.2s;
+}
+.qty-btn.active {
+  background: var(--ios-blue);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+}
+
+/* Load summary */
+.load-summary {
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, #0D2137, #163352);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  color: white;
+}
+.load-sum-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 10px;
+}
+.load-chip {
+  border-radius: var(--radius-inset);
+  padding: 10px 12px;
+}
+.load-chip.heat { background: rgba(255,107,53,0.2); border: 1px solid rgba(255,107,53,0.3); }
+.load-chip.cool { background: rgba(0,122,255,0.2);  border: 1px solid rgba(0,122,255,0.3); }
+.load-chip .lc-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.load-chip .lc-val { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: white; line-height: 1; }
+.load-chip .lc-sub { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+/* Model cards */
+.model-card {
+  margin: 0 16px 10px;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 1.5px solid var(--sep);
+  background: var(--grouped-card);
+  transition: all 0.2s;
+}
+.model-card.selected { border-color: var(--ios-blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+.model-card.recommended { border-color: rgba(52,199,89,0.4); }
+.model-card.best-available { border-color: rgba(255,59,48,0.3); }
+
+.mc-header {
+  padding: 12px 14px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.mc-header.ok-bg   { background: rgba(52,199,89,0.1); }
+.mc-header.bad-bg  { background: rgba(255,59,48,0.08); }
+.mc-header.gray-bg { background: var(--fill3); }
+
+.mc-model-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: var(--label); }
+.mc-brand-name { font-size: 11px; color: var(--label3); margin-top: 2px; }
+.mc-badge-tag {
+  font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+  white-space: nowrap;
+}
+.tag-recommended { background: rgba(52,199,89,0.15); color: var(--ios-green); }
+.tag-best        { background: rgba(255,59,48,0.12); color: var(--ios-red); }
+.tag-backup      { background: var(--fill2); color: var(--label2); }
+
+.mc-caps {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 12px 14px;
+}
+.cap-box {
+  border-radius: 10px;
+  padding: 12px;
+  border: 1.5px solid;
+}
+.cap-box.heat-ok  { border-color: rgba(52,199,89,0.3); background: rgba(52,199,89,0.06); }
+.cap-box.heat-bad { border-color: rgba(255,59,48,0.25); background: rgba(255,59,48,0.05); }
+.cap-box.cool-ok  { border-color: rgba(0,122,255,0.25); background: rgba(0,122,255,0.05); }
+.cap-box.cool-bad { border-color: rgba(255,59,48,0.25); background: rgba(255,59,48,0.05); }
+.cap-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.cap-lbl.heat { color: #FF6B35; }
+.cap-lbl.cool { color: var(--ios-blue); }
+.cap-kw { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.cap-kw.heat { color: #FF6B35; }
+.cap-kw.cool { color: var(--ios-blue); }
+.cap-per { font-size: 11px; color: var(--label3); margin-bottom: 4px; }
+.cap-total { font-size: 13px; font-weight: 700; }
+.cap-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+.status-ok  { background: rgba(52,199,89,0.15); color: var(--ios-green); }
+.status-bad { background: rgba(255,59,48,0.12); color: var(--ios-red); }
+
+.mc-elec {
+  padding: 10px 14px;
+  background: var(--fill3);
+  border-top: 0.5px solid var(--sep);
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+}
+.elec-item .e-lbl { font-size: 10px; color: var(--label3); font-weight: 600; text-transform: uppercase; }
+.elec-item .e-val { font-size: 13px; font-weight: 600; color: var(--label); }
+
+.mc-footer {
+  padding: 10px 14px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 0.5px solid var(--sep);
+}
+.select-unit-btn {
+  padding: 9px 20px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--ios-blue);
+  color: white;
+  font-family: inherit;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.select-unit-btn:active { opacity: 0.75; }
+.select-unit-btn.selected-btn { background: var(--ios-green); }
+
+/* ═══════════════════════════
+   UNIT SUMMARY BOX
+   ═══════════════════════════ */
+.unit-summary {
+  display: none;
+  background: linear-gradient(135deg, #0D2137, #163352);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.unit-summary.show { display: block; }
+.unit-summary h3 {
+  font-size: 17px; font-weight: 700; color: white; letter-spacing: -0.5px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.unit-sum-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+}
+@media (max-width: 480px) { .unit-sum-grid { grid-template-columns: 1fr 1fr; } }
+.unit-sum-wide { grid-column: 1 / -1; }
+.unit-sum-item {
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius-inset);
+  padding: 12px;
+  text-align: center;
+}
+.unit-sum-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom: 5px;
+}
+.unit-sum-val {
+  font-size: 20px; font-weight: 700; color: white; letter-spacing: -0.5px;
+}
+.unit-sum-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+
+/* ═══════════════════════════
+   VOLUME BREAKDOWN CHIPS
+   ═══════════════════════════ */
+.vol-breakdown {
+  padding: 12px 16px 14px;
+  background: var(--fill3);
+  border-top: 0.5px solid var(--sep);
+}
+.vb-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--ios-blue); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.vb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+.vb-chip {
+  background: var(--grouped-card);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--sep);
+  text-align: center;
+}
+.vc-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: var(--label3); margin-bottom: 4px;
+}
+.vc-val {
+  font-size: 17px; font-weight: 800; color: var(--label);
+  letter-spacing: -0.5px; line-height: 1.1;
+}
+.vc-sub {
+  font-size: 11px; color: var(--label3); margin-top: 3px;
+}
+.vb-chip.vb-total {
+  background: linear-gradient(135deg, #0D2137, #163352);
+  border-color: rgba(0,122,255,0.3);
+}
+.vb-chip.vb-total .vc-lbl { color: rgba(255,255,255,0.5); }
+.vb-chip.vb-total .vc-val { color: white; font-size: 20px; }
+.vb-chip.vb-total .vc-sub { color: rgba(255,255,255,0.4); }
+
+/* ═══════════════════════════
+   MODE TOGGLE (Brand vs Manual)
+   ═══════════════════════════ */
+.mode-toggle {
+  display: flex; gap: 8px; padding: 12px 16px;
+}
+.mode-btn {
+  flex: 1; padding: 10px;
+  border: 1.5px solid var(--sep);
+  border-radius: var(--radius-inset);
+  background: var(--fill3);
+  color: var(--label2);
+  font-family: inherit;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: all 0.2s;
+}
+.mode-btn.active {
+  background: var(--navy2);
+  color: white;
+  border-color: transparent;
+}
+
+/* ═══════════════════════════
+   NOTE BOX
+   ═══════════════════════════ */
+.note-box {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  background: rgba(255,214,10,0.1);
+  border: 1px solid rgba(255,214,10,0.3);
+  border-radius: var(--radius-inset);
+  font-size: 13px;
+  color: var(--label2);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════
+   MANUAL ENTRY CARD
+   ═══════════════════════════ */
+.manual-card {
+  margin: 0 16px 12px;
+  background: var(--fill3);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  border: 1.5px solid var(--sep);
+}
+.manual-card h4 {
+  font-size: 14px; font-weight: 700; color: var(--label); margin-bottom: 12px;
+}
+.manual-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+@media (max-width: 480px) { .manual-row { grid-template-columns: 1fr; } }
+.manual-field label {
+  font-size: 11px; font-weight: 600; color: var(--label3);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  display: block; margin-bottom: 5px;
+}
+.manual-field .ios-input { width: 100%; text-align: left; }
+.cap-installed {
+  border-radius: var(--radius-inset);
+  padding: 10px 12px; margin-top: 6px;
+}
+.cap-installed.heat { background: rgba(255,107,53,0.08); }
+.cap-installed.cool { background: rgba(0,122,255,0.08); }
+.cap-installed .ci-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--label3); margin-bottom: 4px; }
+.cap-installed .ci-val { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.cap-installed .ci-status { font-size: 12px; margin-top: 3px; }
+
+/* ═══════════════════════════
+   SOLAR BOX
+   ═══════════════════════════ */
+.solar-inputs {
+  padding: 0 16px 16px;
+  transition: opacity 0.2s;
+}
+.solar-box {
+  background: rgba(255,214,10,0.08);
+  border: 1px solid rgba(255,214,10,0.25);
+  border-radius: var(--radius-inset);
+  padding: 14px;
+}
+.solar-calc-note {
+  font-size: 12px; color: var(--label3); margin-top: 8px; line-height: 1.5;
+}
+.solar-2col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.solar-field label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--label3); display: block; margin-bottom: 5px;
+}
+
+/* ═══════════════════════════
+   NO CALC NOTICE
+   ═══════════════════════════ */
+.no-calc-notice {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  background: rgba(255,214,10,0.1);
+  border: 1px solid rgba(255,214,10,0.3);
+  border-radius: var(--radius-inset);
+  font-size: 13px;
+  color: var(--label2);
+}
+
+/* ═══════════════════════════
+   SELECTION SUMMARY TABLE
+   ═══════════════════════════ */
+.sel-summary {
+  margin: 10px 14px 0;
+  border: 1.5px solid var(--ios-blue);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--grouped-card);
+}
+.sel-summary-header {
+  background: rgba(0,122,255,0.1);
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 700; color: var(--ios-blue);
+}
+.sel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sel-table th {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--label3); padding: 8px 12px;
+  border-bottom: 0.5px solid var(--sep); text-align: center;
+}
+.sel-table th:first-child { text-align: left; }
+.sel-table td {
+  padding: 9px 12px; text-align: center;
+  border-bottom: 0.5px solid var(--sep);
+}
+.sel-table td:first-child { text-align: left; font-weight: 600; }
+.sel-table tr:last-child td { border-bottom: none; }
+
+@media (max-width: 480px) {
+  .brand-grid { grid-template-columns: 1fr 1fr; }
+  .mc-caps { grid-template-columns: 1fr; }
+  .mc-elec { grid-template-columns: 1fr 1fr; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════
+   FOOTER
+   ═══════════════════════════ */
+.app-footer {
+  background: linear-gradient(135deg, #0D2137, #163352);
+  color: white;
+  padding: 40px 20px 60px;
+  margin-top: 40px;
+  border-radius: 20px 20px 0 0;
+}
+.footer-logo {
+  font-size: 20px; font-weight: 700; margin-bottom: 8px;
+  color: var(--ios-cyan);
+}
+.footer-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; max-width: 500px; margin-bottom: 24px; }
+.footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+@media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+.footer-section h4 { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
+.footer-section a, .footer-section p { font-size: 13px; color: rgba(255,255,255,0.65); text-decoration: none; display: block; margin-bottom: 6px; }
+.footer-divider { height: 0.5px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+.footer-bottom { font-size: 11px; color: rgba(255,255,255,0.3); }
+.privacy-box {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px; padding: 14px 16px;
+  margin-top: 16px;
+}
+.privacy-box h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+.privacy-box p { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.8; }
+.privacy-box a { color: var(--ios-cyan); }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════
+     NAV BAR
+     ═══════════════════ -->
+<nav class="nav-bar">
+  <div class="nav-content">
+    <div class="nav-logo">
+      <div class="icon">🌡️</div>
+      <div class="wordmark">AQUA<span>CALC</span></div>
+    </div>
+    <div class="nav-action">
+      <button class="btn-nav secondary" onclick="generatePDF()">⬇ PDF Report</button>
+    </div>
+  </div>
+  <!-- Section quick-nav tabs -->
+  <div class="section-tabs" id="sectionTabs">
+    <button class="stab-pill active" onclick="scrollToSection('secProject')">Project</button>
+    <button class="stab-pill" onclick="scrollToSection('secDimensions')">Dimensions</button>
+    <button class="stab-pill" onclick="scrollToSection('secTemps')">Temperatures</button>
+    <button class="stab-pill" onclick="scrollToSection('secWind')">Wind</button>
+    <button class="stab-pill" onclick="scrollToSection('secSolar')">Solar</button>
+    <button class="stab-pill" onclick="scrollToSection('secResults')">Results</button>
+    <button class="stab-pill" onclick="scrollToSection('secUnits')">Unit Selection</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════
+     MAIN CONTENT
+     ═══════════════════ -->
+<div class="main">
+
+  <!-- ── PROJECT INFO ── -->
+  <div id="secProject">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📋</div>
+      <h2>Project Details</h2>
+    </div>
+
+    <div class="project-card">
+      <label>Project Name</label>
+      <input type="text" class="ios-input full" id="projectName" placeholder="Enter project name…">
+      <div class="project-grid">
+        <div>
+          <label>Main Contractor</label>
+          <input type="text" class="ios-input full small" id="mainContractor" placeholder="Contractor name">
+        </div>
+        <div>
+          <label>Consultant</label>
+          <input type="text" class="ios-input full small" id="consultantName" placeholder="Consultant name">
+        </div>
+        <div>
+          <label>Sub Contractor</label>
+          <input type="text" class="ios-input full small" id="subContractor" placeholder="Sub contractor">
+        </div>
+        <div>
+          <label>Location</label>
+          <input type="text" class="ios-input full small" id="projectLocation" placeholder="e.g. Dubai, UAE">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Report Date</label>
+        <input type="date" id="projectDate" class="ios-input" style="width:auto;text-align:left;color-scheme:dark;color:white;background:rgba(255,255,255,0.1);border-color:transparent;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── POOL DIMENSIONS ── -->
+  <div id="secDimensions">
+    <div class="section-header">
+      <div class="section-icon icon-teal">📐</div>
+      <h2>Pool Dimensions</h2>
+    </div>
+
+    <!-- Pool Shape & Depth + System Type all in one card -->
+    <div class="card">
+      <!-- Pool System Type row at top -->
+      <div class="card-row" style="flex-direction:column;align-items:flex-start;gap:10px;padding-bottom:14px">
+        <span class="row-label" style="font-weight:700">Pool System Type
+          <small>Select before entering dimensions</small>
+        </span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">
+          <button class="pool-sys-btn active" id="psBtn_overflow" onclick="selectPoolSystem('overflow')">
+            <div class="psb-icon">♾️</div>
+            <div class="psb-name">Overflow Pool</div>
+            <div class="psb-desc">With surge / balance tank</div>
+          </button>
+          <button class="pool-sys-btn" id="psBtn_skimmer" onclick="selectPoolSystem('skimmer')">
+            <div class="psb-icon">🌊</div>
+            <div class="psb-name">Skimmer Pool</div>
+            <div class="psb-desc">With optional balance tank</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <span class="row-label">Pool Shape</span>
+        <div class="row-control">
+          <select class="ios-select" id="poolType" onchange="updatePoolCalc()">
+            <option value="rect">Rectangular</option>
+            <option value="oval">Oval / Kidney</option>
+            <option value="circular">Circular</option>
+            <option value="custom">Custom Area</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-row" id="lengthField">
+        <span class="row-label">Length (L)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="poolL" value="10" min="1" step="0.1" oninput="updatePoolCalc()">
+          <span class="unit-label">m</span>
+        </div>
+      </div>
+      <div class="card-row" id="widthField">
+        <span class="row-label">Width (W)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="poolW" value="5" min="1" step="0.1" oninput="updatePoolCalc()">
+          <span class="unit-label">m</span>
+        </div>
+      </div>
+      <div class="card-row" id="customAreaField" style="display:none">
+        <span class="row-label">Pool Area (custom)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="customArea" value="50" min="1" step="0.5" oninput="updatePoolCalc()">
+          <span class="unit-label">m²</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Shallow-End Depth (Ds)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="depthS" value="1.0" min="0.3" step="0.1" oninput="updatePoolCalc()">
+          <span class="unit-label">m</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Deep-End Depth (Dd)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="depthD" value="2.0" min="0.5" step="0.1" oninput="updatePoolCalc()">
+          <span class="unit-label">m</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Average Depth (AD)
+          <small>Auto: (Ds + Dd) / 2</small>
+        </span>
+        <div class="row-control">
+          <input type="number" class="ios-input readonly" id="depthAvg" value="1.5" step="0.01" readonly>
+          <span class="unit-label">m</span>
+        </div>
+      </div>
+
+      <!-- Overflow extra volumes — Balancing Tank + Additional Water Volume only -->
+      <div id="evOverflow" style="padding:10px 16px 14px;border-top:0.5px solid var(--sep);background:var(--fill3)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3);margin-bottom:10px">⊕ Additional Water Volumes — Overflow System</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Balancing Tank Volume</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="evBalance_of" value="0" min="0" step="0.1" oninput="updatePoolCalc()" style="width:90px">
+              <span class="unit-label">m³</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Additional Water Volume</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="evExtra_of" value="0" min="0" step="0.1" oninput="updatePoolCalc()" style="width:90px">
+              <span class="unit-label">m³</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--label3);margin-top:8px">💡 Both volumes added to pool volume for total system water volume calculation</div>
+      </div>
+
+      <!-- Skimmer extra volumes — same fields but optional -->
+      <div id="evSkimmer" style="display:none;padding:10px 16px 14px;border-top:0.5px solid var(--sep);background:var(--fill3)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3);margin-bottom:10px">⊕ Additional Water Volumes — Skimmer System <span style="color:var(--ios-blue);font-weight:600;text-transform:none;letter-spacing:0;font-size:11px">(Optional)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Balancing Tank Volume</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="evBalance" value="0" min="0" step="0.1" oninput="updatePoolCalc()" style="width:90px">
+              <span class="unit-label">m³</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Additional Water Volume</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="evExtra" value="0" min="0" step="0.1" oninput="updatePoolCalc()" style="width:90px">
+              <span class="unit-label">m³</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--label3);margin-top:8px">💡 Optional — leave as 0 if not applicable. Entered volumes are added to pool volume for total system water volume</div>
+      </div>
+    </div>
+
+    <!-- ③ Computed Values — clear Auto / Manual -->
+    <div class="card">
+      <div style="padding:12px 16px 6px; display:flex; align-items:center; justify-content:space-between">
+        <span style="font-size:11px;font-weight:700;color:var(--label2);text-transform:uppercase;letter-spacing:0.5px">Computed Values</span>
+        <span style="font-size:11px;color:var(--label3)">Tap MANUAL to override</span>
+      </div>
+      <div class="computed-row">
+        <!-- Surface Area -->
+        <div class="computed-box light">
+          <div class="cb-title">📐 Surface Area (A)</div>
+          <div class="am-strip">
+            <button class="am-btn am-auto-active" id="areaBtnAuto"   onclick="setAreaMode('auto')">🔒 AUTO</button>
+            <button class="am-btn"                id="areaBtnManual" onclick="setAreaMode('manual')">✏️ MANUAL</button>
+          </div>
+          <!-- AUTO display -->
+          <div id="areaAutoDisp">
+            <div class="cb-val" id="areaAutoVal">50.00</div>
+            <div class="cb-unit">m²</div>
+            <div class="cb-note">Calculated from shape</div>
+          </div>
+          <!-- MANUAL input -->
+          <div class="cb-manual-wrap" id="areaManualWrap">
+            <input type="number" class="cb-manual-inp" id="areaManual" step="0.1" min="1" placeholder="Enter m²" oninput="onManualArea()">
+            <div class="cb-unit">m²</div>
+            <div class="cb-note override">⚠️ Manual override active</div>
+          </div>
+        </div>
+
+        <!-- Pool Volume / Total System Volume -->
+        <div class="computed-box dark">
+          <div class="cb-title">💧 Total System Volume</div>
+          <div class="am-strip dark-strip">
+            <button class="am-btn am-auto-active" id="volBtnAuto"   onclick="setVolMode('auto')"   style="color:white">🔒 AUTO</button>
+            <button class="am-btn"                id="volBtnManual" onclick="setVolMode('manual')" style="color:rgba(255,255,255,0.45)">✏️ MANUAL</button>
+          </div>
+          <!-- AUTO display -->
+          <div id="volAutoDisp">
+            <div class="cb-val" id="volAutoVal" style="color:white">75.00</div>
+            <div class="cb-unit">m³</div>
+            <div class="cb-note" id="volAutoNote">Pool + tanks volume</div>
+          </div>
+          <!-- MANUAL input -->
+          <div class="cb-manual-wrap" id="volManualWrap">
+            <input type="number" class="cb-manual-inp" id="volManual" step="0.1" min="1" placeholder="Enter m³" oninput="onManualVol()">
+            <div class="cb-unit" style="color:rgba(255,255,255,0.4)">m³</div>
+            <div class="cb-note override">⚠️ Manual override active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total System Volume Breakdown -->
+      <div class="vol-breakdown" id="volBreakdownBox">
+        <div class="vb-title">💧 Total System Water Volume</div>
+        <div class="vb-grid" id="vbGrid"><!-- populated by JS --></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TEMPERATURES ── -->
+  <div id="secTemps">
+    <div class="section-header">
+      <div class="section-icon icon-orange">🌡️</div>
+      <h2>Temperature Settings</h2>
+    </div>
+
+    <div class="card">
+      <div style="padding:12px 16px 8px">
+        <p style="font-size:13px;color:var(--label2);line-height:1.5;">Enter temperature data for <strong>Summer</strong> and <strong>Winter</strong> conditions. ΔT values are auto-calculated.</p>
+      </div>
+      <div class="temp-table-wrap">
+        <table class="temp-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Sym</th>
+              <th><span class="badge badge-summer">Summer</span></th>
+              <th><span class="badge badge-winter">Winter</span></th>
+              <th>Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Initial Water Temp</td>
+              <td><strong>T1</strong></td>
+              <td><input type="number" class="ios-input" id="T1s" value="28" min="0" max="45" oninput="calcDeltas()"></td>
+              <td><input type="number" class="ios-input" id="T1w" value="18" min="0" max="45" oninput="calcDeltas()"></td>
+              <td>°C</td>
+            </tr>
+            <tr>
+              <td>Desired Pool Temp</td>
+              <td><strong>T2</strong></td>
+              <td><input type="number" class="ios-input" id="T2s" value="28" min="0" max="45" oninput="calcDeltas()"></td>
+              <td><input type="number" class="ios-input" id="T2w" value="28" min="0" max="45" oninput="calcDeltas()"></td>
+              <td>°C</td>
+            </tr>
+            <tr>
+              <td>Ambient Air Temp</td>
+              <td><strong>T3</strong></td>
+              <td><input type="number" class="ios-input" id="T3s" value="46" min="-10" max="60" oninput="calcDeltas()"></td>
+              <td><input type="number" class="ios-input" id="T3w" value="15" min="-10" max="60" oninput="calcDeltas()"></td>
+              <td>°C</td>
+            </tr>
+            <tr class="computed">
+              <td>ΔT1 = T2 − T1 <span class="badge badge-auto">Auto</span></td>
+              <td><strong>ΔT1</strong></td>
+              <td id="dT1s_disp" style="font-size:17px;font-weight:700;color:#FF6B35">0</td>
+              <td id="dT1w_disp" style="font-size:17px;font-weight:700;color:var(--ios-blue)">10</td>
+              <td>K</td>
+            </tr>
+            <tr class="computed">
+              <td>ΔT2 = T1 − T3 <span class="badge badge-auto">Auto</span></td>
+              <td><strong>ΔT2</strong></td>
+              <td id="dT2s_disp" style="font-size:17px;font-weight:700;color:#FF6B35">-18</td>
+              <td id="dT2w_disp" style="font-size:17px;font-weight:700;color:var(--ios-blue)">3</td>
+              <td>K</td>
+            </tr>
+            <tr class="computed">
+              <td>ΔT3 = |T2 − T3| <span class="badge badge-auto">Auto</span></td>
+              <td><strong>ΔT3</strong></td>
+              <td id="dT3s_disp" style="font-size:17px;font-weight:700;color:#FF6B35">18</td>
+              <td id="dT3w_disp" style="font-size:17px;font-weight:700;color:var(--ios-blue)">13</td>
+              <td>K</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">Heat-up / Cool-down Period (θ1)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="theta1" value="48" min="1">
+          <span class="unit-label">hrs</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Daily Running Hours (θ2)</span>
+        <div class="row-control">
+          <input type="number" class="ios-input" id="theta2" value="16" min="8" max="24">
+          <span class="unit-label">hrs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WIND VELOCITY ── -->
+  <div id="secWind">
+    <div class="section-header">
+      <div class="section-icon icon-teal">💨</div>
+      <h2>Wind & Multiplier Factors</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">Wind Speed at Site</span>
+        <div class="row-control">
+          <select class="ios-select" id="windSpeed" onchange="updateWindFactors()">
+            <option value="5">Less than 5 km/h</option>
+            <option value="10" selected>5–8 km/h (Light)</option>
+            <option value="16">8–16 km/h (Moderate)</option>
+            <option value="20">≥ 16 km/h (Strong)</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto;padding:0 16px 12px">
+        <table class="wind-table">
+          <thead>
+            <tr>
+              <th>Wind (km/h)</th>
+              <th>w (Heat)</th>
+              <th>w (Cool)</th>
+              <th>w (Evap)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="wrow_5" onclick="selectWind(5)"><td>&lt; 5</td><td>1.0</td><td>1.0</td><td>1.0</td></tr>
+            <tr id="wrow_10" class="selected-wind" onclick="selectWind(10)"><td>5 – 8</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
+            <tr id="wrow_16" onclick="selectWind(16)"><td>8 – 16</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
+            <tr id="wrow_20" onclick="selectWind(20)"><td>≥ 16</td><td>2.0</td><td>2.0</td><td>2.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="factor-row">
+        <div class="factor-chip">
+          <div class="lbl">w (Heat)</div>
+          <div class="val heat-val" id="wHeatDisp">1.25</div>
+        </div>
+        <div class="factor-chip">
+          <div class="lbl">w (Cool)</div>
+          <div class="val cool-val" id="wCoolDisp">1.25</div>
+        </div>
+        <div class="factor-chip">
+          <div class="lbl">w (Evap)</div>
+          <div class="val green-val" id="wEvapDisp">1.25</div>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Pool Enclosure</span>
+        <div class="row-control">
+          <select class="ios-select" id="enclosure">
+            <option value="1.0">Outdoor — No Cover</option>
+            <option value="0.75">Outdoor — Pool Cover</option>
+            <option value="0.5">Semi-enclosed</option>
+            <option value="0.35">Fully Indoor</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">Pool Location</span>
+        <div class="row-control">
+          <select class="ios-select" id="poolLocation">
+            <option value="outdoor">Outdoor</option>
+            <option value="indoor">Indoor</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SOLAR HEAT GAIN ── -->
+  <div id="secSolar">
+    <div class="section-header">
+      <div class="section-icon icon-yellow">☀️</div>
+      <h2>Solar Heat Gain</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">Include Solar Heat Gain
+          <small>Recommended for outdoor UAE/ME pools</small>
+        </span>
+        <div class="row-control">
+          <input type="checkbox" class="ios-toggle" id="solarCheck" checked onclick="toggleSolar()">
+        </div>
+      </div>
+    </div>
+
+    <div class="solar-inputs" id="solarInputs">
+      <div class="solar-box">
+        <div class="solar-2col">
+          <div class="solar-field">
+            <label>Solar Irradiance</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="solarIrr" value="866.56" step="0.01" style="width:120px" oninput="updateSolarCalc()">
+              <span class="unit-label">W/m²</span>
+            </div>
+          </div>
+          <div class="solar-field">
+            <label>Sunny Hours/Day</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" class="ios-input" id="solarHrs" value="6.4" step="0.1" min="1" max="16" style="width:100px" oninput="updateSolarCalc()">
+              <span class="unit-label">hr</span>
+            </div>
+          </div>
+        </div>
+        <div class="solar-calc-note">
+          Solar Gain = Area × Irradiance × Sunny Hrs = <strong id="solarCalcShow">—</strong> kWh/day → <strong id="solarKWShow">—</strong> kW continuous
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CALCULATE BUTTON ── -->
+  <button class="calc-btn" id="calcBtn" onclick="runCalculation()">
+    ⚡ Calculate Heat & Cool Requirements
+  </button>
+
+  <!-- ── RESULTS ── -->
+  <div class="results-section" id="resultsSection">
+
+    <div id="secResults">
+      <div class="section-header">
+        <div class="section-icon icon-green">✓</div>
+        <h2>Calculation Results</h2>
+      </div>
+
+      <!-- Volume / Area summary chips -->
+      <div class="summary-grid" style="margin-bottom:12px">
+        <div class="summary-chip">
+          <div class="slbl">Pool Volume</div>
+          <div class="sval" id="sum_vol">—</div>
+          <div style="font-size:11px;color:var(--label3)">m³</div>
+        </div>
+        <div class="summary-chip">
+          <div class="slbl">Total System Vol.</div>
+          <div class="sval" id="sum_totalvol">—</div>
+          <div style="font-size:11px;color:var(--label3)">m³</div>
+        </div>
+        <div class="summary-chip">
+          <div class="slbl">Surface Area</div>
+          <div class="sval" id="sum_area">—</div>
+          <div style="font-size:11px;color:var(--label3)">m²</div>
+        </div>
+      </div>
+
+      <!-- ★ SIDE-BY-SIDE Summer / Winter ★ -->
+      <div class="results-cols">
+
+        <!-- SUMMER COLUMN -->
+        <div class="season-col summer">
+          <div class="season-col-header summer">☀ Summer Conditions</div>
+
+          <!-- Heating -->
+          <div class="scol-block">
+            <div class="scol-title">🔥 Heating</div>
+            <div class="scol-row">
+              <span class="scol-lbl">Initial Heating (q1)</span>
+              <span class="scol-val" style="color:#FF6B35" id="s_q1h">—</span>
+            </div>
+            <div class="scol-row">
+              <span class="scol-lbl">Daily Heat Loss (q2)</span>
+              <span class="scol-val" style="color:#FF6B35" id="s_q2h">—</span>
+            </div>
+            <div class="scol-row total-row">
+              <span class="scol-lbl">Total Heating Load</span>
+              <span class="scol-val" style="color:#FF6B35" id="s_qhTotal">—</span>
+            </div>
+            <div class="scol-hero heat-hero">
+              <div class="sh-lbl">Required Heating</div>
+              <div class="sh-num" id="s_heatRequired">—</div>
+              <div class="sh-sub">kW</div>
+            </div>
+          </div>
+
+          <!-- Cooling -->
+          <div class="scol-block">
+            <div class="scol-title">❄️ Cooling</div>
+            <div class="scol-row">
+              <span class="scol-lbl">Initial Cooling (q1)</span>
+              <span class="scol-val" style="color:var(--ios-blue)" id="s_q1c">—</span>
+            </div>
+            <div class="scol-row">
+              <span class="scol-lbl">Solar Gain (Q☀)</span>
+              <span class="scol-val" style="color:var(--ios-blue)" id="s_qsolar">—</span>
+            </div>
+            <div class="scol-row total-row">
+              <span class="scol-lbl">Total Cooling Load</span>
+              <span class="scol-val" style="color:var(--ios-blue)" id="s_qcTotal">—</span>
+            </div>
+            <div class="scol-hero cool-hero">
+              <div class="sh-lbl">Required Cooling</div>
+              <div class="sh-num" id="s_coolRequired">—</div>
+              <div class="sh-sub">kW</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WINTER COLUMN -->
+        <div class="season-col winter">
+          <div class="season-col-header winter">❄ Winter Conditions</div>
+
+          <!-- Heating -->
+          <div class="scol-block">
+            <div class="scol-title">🔥 Heating</div>
+            <div class="scol-row">
+              <span class="scol-lbl">Initial Heating (q1)</span>
+              <span class="scol-val" style="color:#FF6B35" id="w_q1h">—</span>
+            </div>
+            <div class="scol-row">
+              <span class="scol-lbl">Daily Heat Loss (q2)</span>
+              <span class="scol-val" style="color:#FF6B35" id="w_q2h">—</span>
+            </div>
+            <div class="scol-row total-row">
+              <span class="scol-lbl">Total Heating Load</span>
+              <span class="scol-val" style="color:#FF6B35" id="w_qhTotal">—</span>
+            </div>
+            <div class="scol-hero heat-hero">
+              <div class="sh-lbl">Required Heating</div>
+              <div class="sh-num" id="w_heatRequired">—</div>
+              <div class="sh-sub">kW</div>
+            </div>
+          </div>
+
+          <!-- Cooling -->
+          <div class="scol-block">
+            <div class="scol-title">❄️ Cooling</div>
+            <div class="scol-row">
+              <span class="scol-lbl">Initial Cooling (q1)</span>
+              <span class="scol-val" style="color:var(--ios-green)" id="w_q1c">—</span>
+            </div>
+            <div class="scol-row">
+              <span class="scol-lbl">Solar Gain (Q☀)</span>
+              <span class="scol-val" style="color:var(--ios-green)" id="w_qsolar">—</span>
+            </div>
+            <div class="scol-row total-row">
+              <span class="scol-lbl">Total Cooling Load</span>
+              <span class="scol-val" style="color:var(--ios-green)" id="w_qcTotal">—</span>
+            </div>
+            <div class="scol-hero cool-hero">
+              <div class="sh-lbl">Required Cooling</div>
+              <div class="sh-num" id="w_coolRequired">—</div>
+              <div class="sh-sub">kW</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Governing load summary (used for unit selection) -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3);margin-bottom:8px">⚡ Governing Design Load (Max of Summer / Winter)</div>
+      <div class="governing-row">
+        <div class="governing-chip heat gc-heat">
+          <div class="gc-lbl">🔥 Design Heating Load</div>
+          <div class="gc-val" id="gov_heat">—</div>
+          <div class="gc-sub" id="gov_heat_sub">kW</div>
+        </div>
+        <div class="governing-chip cool gc-cool">
+          <div class="gc-lbl">❄ Design Cooling Load</div>
+          <div class="gc-val" id="gov_cool">—</div>
+          <div class="gc-sub" id="gov_cool_sub">kW</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UNIT SELECTION ── -->
+    <div id="secUnits">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🏷</div>
+        <h2>Unit Selection</h2>
+      </div>
+
+      <div class="card">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="modeBtn_brand" onclick="setSelectionMode('brand')">🏷 Brand Catalogue</button>
+          <button class="mode-btn" id="modeBtn_manual" onclick="setSelectionMode('manual')">✏️ Enter Manually</button>
+        </div>
+
+        <!-- Brand panel -->
+        <div id="panel_brand">
+          <div style="padding:4px 16px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3)">Step A — Choose Brand</div>
+          <div class="brand-grid" id="brandBtns"></div>
+
+          <div style="padding:4px 16px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3)">Step B — Number of Units</div>
+          <div class="qty-row">
+            <button class="qty-btn active" id="qtyBtn_1" onclick="setUnitQty(1)">1</button>
+            <button class="qty-btn" id="qtyBtn_2" onclick="setUnitQty(2)">2</button>
+            <button class="qty-btn" id="qtyBtn_3" onclick="setUnitQty(3)">3</button>
+            <button class="qty-btn" id="qtyBtn_4" onclick="setUnitQty(4)">4</button>
+          </div>
+          <div style="padding:0 16px 8px;font-size:12px;color:var(--label3)">💡 Load is split equally across units</div>
+
+          <div id="matchedModelsArea" style="display:none">
+            <div style="padding:4px 16px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3)">Step C — Matched Models</div>
+            <div id="matchedModelsGrid"></div>
+          </div>
+        </div>
+
+        <!-- Manual panel -->
+        <div id="panel_manual" style="display:none">
+          <div class="manual-card">
+            <h4>🔁 Reversible Heat Pump — Heater & Chiller</h4>
+            <div class="manual-row">
+              <div class="manual-field">
+                <label>Brand / Manufacturer</label>
+                <input type="text" class="ios-input full" id="heaterBrand" placeholder="e.g. AQUA, Fluidra">
+              </div>
+              <div class="manual-field">
+                <label>Model Code</label>
+                <input type="text" class="ios-input full" id="heaterModel" placeholder="e.g. PH2-02650-60HZ">
+              </div>
+            </div>
+            <input type="hidden" id="chillerBrand">
+            <input type="hidden" id="chillerModel">
+            <input type="hidden" id="comboCheck">
+            <input type="hidden" id="comboBrand">
+            <input type="hidden" id="comboModel">
+            <input type="hidden" id="comboQty" value="1">
+            <div class="manual-row" style="margin-top:10px">
+              <div class="manual-field">
+                <label>🔥 Heating Capacity</label>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input type="number" class="ios-input" id="heaterKW" placeholder="e.g. 23.1" step="0.01" style="width:110px">
+                  <span class="unit-label">kW</span>
+                </div>
+                <div class="cap-installed heat">
+                  <div class="ci-lbl">Total Installed Heating</div>
+                  <div class="ci-val heat-val" id="heaterTotalKW">— kW</div>
+                  <div class="ci-status" id="heaterSufficiency"></div>
+                </div>
+              </div>
+              <div class="manual-field">
+                <label>❄️ Cooling Capacity</label>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input type="number" class="ios-input" id="chillerKW" placeholder="e.g. 17.0" step="0.01" style="width:110px">
+                  <span class="unit-label">kW</span>
+                </div>
+                <div class="cap-installed cool">
+                  <div class="ci-lbl">Total Installed Cooling</div>
+                  <div class="ci-val cool-val" id="chillerTotalKW">— kW</div>
+                  <div class="ci-status" id="chillerSufficiency"></div>
+                </div>
+              </div>
+            </div>
+            <div class="manual-field" style="margin-top:10px;max-width:150px">
+              <label>Quantity (Units)</label>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input type="number" class="ios-input" id="heaterQty" value="1" min="1" style="width:80px">
+                <span class="unit-label">nos</span>
+              </div>
+            </div>
+            <input type="hidden" id="chillerQty" value="1">
+          </div>
+        </div>
+
+        <div style="padding:0 16px 16px">
+          <button class="calc-btn secondary" onclick="updateUnitSummary()">✓ Update Unit Summary & Verify Sizing</button>
+        </div>
+      </div>
+
+      <!-- Unit Summary Box -->
+      <div class="unit-summary" id="unitSummaryBox">
+        <h3>✅ Equipment Summary</h3>
+        <div class="unit-sum-grid" id="unitSumContent"></div>
+      </div>
+    </div>
+
+  </div><!-- /results-section -->
+
+</div><!-- /main -->
+
+<!-- ═══════════════════
+     FOOTER
+     ═══════════════════ -->
+<footer class="app-footer">
+  <div class="footer-logo">🌡️ AquaCalc</div>
+  <p class="footer-desc">Professional swimming pool heat pump sizing calculator for engineers, consultants, and contractors in the UAE and Middle East.</p>
+  <div class="footer-grid">
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <a href="#secProject">📋 Project Details</a>
+      <a href="#secDimensions">📐 Pool Dimensions</a>
+      <a href="#secTemps">🌡️ Temperature Settings</a>
+      <a href="#secResults">⚡ Results</a>
+    </div>
+    <div class="footer-section">
+      <h4>Brands Covered</h4>
+      <p>AQUA Middle East</p>
+      <p>AQUATECH</p>
+      <p>PROTEAM Europa</p>
+      <p>Fluidra / Astral</p>
+    </div>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="privacy-box" id="privacy">
+    <h4>🔒 Privacy Policy</h4>
+    <p>
+      <strong style="color:rgba(255,255,255,0.8)">Data:</strong> All calculations run in your browser. No personal data is collected or transmitted.<br>
+      <strong style="color:rgba(255,255,255,0.8)">Disclaimer:</strong> Results are for guidance only. Always verify with manufacturer datasheets and a qualified engineer.
+    </p>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="footer-bottom">© 2026 AquaCalc — Pool Heat Cool Unit Sizing. UAE & Middle East.</div>
+</footer>
+
+<!-- ═══════════════════
+     JAVASCRIPT
+     ═══════════════════ -->
+<script>
+// ── GLOBALS ──
+let results = {};
+let currentSeason = 'summer';
+const windData = {
+  5:  { h: 1.0,  c: 1.0,  e: 1.0  },
+  10: { h: 1.25, c: 1.25, e: 1.25 },
+  16: { h: 1.25, c: 1.25, e: 1.25 },
+  20: { h: 2.0,  c: 2.0,  e: 2.0  }
+};
+let selWind = 10;
+
+// ── SECTION SCROLL ──
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.stab-pill').forEach(b => b.classList.remove('active'));
+  const idx = ['secProject','secDimensions','secTemps','secWind','secSolar','secResults','secUnits'].indexOf(id);
+  const tabs = document.querySelectorAll('.stab-pill');
+  if (tabs[idx]) tabs[idx].classList.add('active');
+}
+
+// ── POOL SYSTEM TYPE ──
+let poolSystemType = 'overflow';
+
+function selectPoolSystem(type) {
+  poolSystemType = type;
+  ['overflow','skimmer'].forEach(t => {
+    document.getElementById('psBtn_' + t).classList.toggle('active', t === type);
+  });
+  document.getElementById('evOverflow').style.display = type === 'overflow' ? '' : 'none';
+  document.getElementById('evSkimmer').style.display  = type === 'skimmer'  ? '' : 'none';
+  updatePoolCalc();
+}
+
+// ── AREA / VOLUME MANUAL MODE ──
+let areaManualMode = false;
+let volManualMode  = false;
+
+function setAreaMode(mode) {
+  areaManualMode = (mode === 'manual');
+  document.getElementById('areaBtnAuto').className   = 'am-btn' + (areaManualMode ? '' : ' am-auto-active');
+  document.getElementById('areaBtnManual').className = 'am-btn' + (areaManualMode ? ' am-manual-active' : '');
+  document.getElementById('areaAutoDisp').style.display   = areaManualMode ? 'none' : '';
+  document.getElementById('areaManualWrap').className = 'cb-manual-wrap' + (areaManualMode ? ' show' : '');
+  if (areaManualMode) {
+    const inp = document.getElementById('areaManual');
+    inp.value = document.getElementById('areaAutoVal').textContent;
+    inp.focus();
+  } else {
+    updatePoolCalc();
+  }
+}
+
+function setVolMode(mode) {
+  volManualMode = (mode === 'manual');
+  const ba = document.getElementById('volBtnAuto');
+  const bm = document.getElementById('volBtnManual');
+  ba.className = 'am-btn' + (volManualMode ? '' : ' am-auto-active');
+  ba.style.color = volManualMode ? 'rgba(255,255,255,0.45)' : 'white';
+  bm.className = 'am-btn' + (volManualMode ? ' am-manual-active' : '');
+  bm.style.color = volManualMode ? 'white' : 'rgba(255,255,255,0.45)';
+  document.getElementById('volAutoDisp').style.display   = volManualMode ? 'none' : '';
+  document.getElementById('volManualWrap').className = 'cb-manual-wrap' + (volManualMode ? ' show' : '');
+  if (volManualMode) {
+    const inp = document.getElementById('volManual');
+    inp.value = document.getElementById('volAutoVal').textContent;
+    inp.focus();
+  } else {
+    updatePoolCalc();
+  }
+}
+
+function onManualArea() {
+  if (!volManualMode) {
+    const area = parseFloat(document.getElementById('areaManual').value) || 0;
+    const Ds = parseFloat(document.getElementById('depthS').value) || 0;
+    const Dd = parseFloat(document.getElementById('depthD').value) || 0;
+    const Davg = (Ds + Dd) / 2;
+    document.getElementById('volManual').value = (area * Davg).toFixed(2);
+  }
+  renderVolBreakdown();
+}
+function onManualVol() { renderVolBreakdown(); }
+
+function getExtraVols() {
+  if (poolSystemType === 'overflow') {
+    const balance = parseFloat(document.getElementById('evBalance_of').value) || 0;
+    const extra   = parseFloat(document.getElementById('evExtra_of').value)   || 0;
+    return { surge: 0, header: 0, balance, extra };
+  } else {
+    const balance = parseFloat(document.getElementById('evBalance').value) || 0;
+    const extra   = parseFloat(document.getElementById('evExtra').value)   || 0;
+    return { surge: 0, header: 0, balance, extra };
+  }
+}
+
+function renderVolBreakdown() {
+  const ev = getExtraVols();
+  const poolVol = volManualMode
+    ? (parseFloat(document.getElementById('volManual').value) || 0)
+    : (parseFloat(document.getElementById('volAutoVal').textContent) || 0);
+
+  const totalExtra = ev.surge + ev.header + ev.balance + ev.extra;
+  const totalVol   = poolVol + totalExtra;
+
+  // Update the Pool Volume box subtitle to show breakdown
+  const volNoteEl = document.getElementById('volAutoNote');
+  if (volNoteEl) {
+    if (totalExtra > 0) {
+      volNoteEl.innerHTML = `Pool ${poolVol.toFixed(2)} + Extra ${totalExtra.toFixed(2)} m³`;
+      volNoteEl.style.color = '#32ADE6';
+    } else {
+      volNoteEl.textContent = 'Pool volume (no extra tanks)';
+      volNoteEl.style.color = '';
+    }
+  }
+  // Update the displayed value in the volume box to show TOTAL
+  const volValEl = document.getElementById('volAutoVal');
+  if (volValEl && !volManualMode) {
+    volValEl.textContent = totalVol.toFixed(2);
+  }
+
+  let chips = `
+    <div class="vb-chip">
+      <div class="vc-lbl">Pool Volume</div>
+      <div class="vc-val">${poolVol.toFixed(2)} m³</div>
+    </div>`;
+
+  if (poolSystemType === 'overflow') {
+    if (ev.balance > 0) chips += `<div class="vb-chip"><div class="vc-lbl">Balancing Tank</div><div class="vc-val">${ev.balance.toFixed(2)} m³</div></div>`;
+    if (ev.extra > 0)   chips += `<div class="vb-chip"><div class="vc-lbl">Additional Vol.</div><div class="vc-val">${ev.extra.toFixed(2)} m³</div></div>`;
+  } else {
+    if (ev.balance > 0) chips += `<div class="vb-chip"><div class="vc-lbl">Balancing Tank</div><div class="vc-val">${ev.balance.toFixed(2)} m³</div></div>`;
+    if (ev.extra > 0)   chips += `<div class="vb-chip"><div class="vc-lbl">Additional Vol.</div><div class="vc-val">${ev.extra.toFixed(2)} m³</div></div>`;
+  }
+
+  chips += `
+    <div class="vb-chip vb-total">
+      <div class="vc-lbl">Total System Volume</div>
+      <div class="vc-val">${totalVol.toFixed(2)} m³</div>
+      <div class="vc-sub">${(totalVol * 1000).toFixed(0)} L</div>
+    </div>`;
+
+  document.getElementById('vbGrid').innerHTML = chips;
+}
+
+function updatePoolCalc() {
+  const type = document.getElementById('poolType').value;
+  const L  = parseFloat(document.getElementById('poolL').value)  || 0;
+  const W  = parseFloat(document.getElementById('poolW').value)  || 0;
+  const Ds = parseFloat(document.getElementById('depthS').value) || 0;
+  const Dd = parseFloat(document.getElementById('depthD').value) || 0;
+  const Davg = (Ds + Dd) / 2;
+  document.getElementById('depthAvg').value = Davg.toFixed(2);
+
+  document.getElementById('lengthField').style.display     = (type !== 'custom') ? '' : 'none';
+  document.getElementById('widthField').style.display      = (type === 'rect' || type === 'oval') ? '' : 'none';
+  document.getElementById('customAreaField').style.display = type === 'custom' ? '' : 'none';
+
+  let autoArea = 0;
+  if (type === 'rect')          autoArea = L * W;
+  else if (type === 'oval')     autoArea = Math.PI * (L/2) * (W/2);
+  else if (type === 'circular') autoArea = Math.PI * (L/2) * (L/2);
+  else autoArea = parseFloat(document.getElementById('customArea').value) || 50;
+
+  if (!areaManualMode) {
+    document.getElementById('areaAutoVal').textContent = autoArea.toFixed(2);
+  }
+
+  const area = areaManualMode
+    ? (parseFloat(document.getElementById('areaManual').value) || autoArea)
+    : autoArea;
+
+  const autoVolM3 = area * Davg;
+  if (!volManualMode) {
+    document.getElementById('volAutoVal').textContent = autoVolM3.toFixed(2);
+  }
+
+  updateSolarCalc(area);
+  renderVolBreakdown();
+}
+
+// ── DELTAS ──
+function calcDeltas() {
+  ['s','w'].forEach(s => {
+    const T1 = parseFloat(document.getElementById('T1'+s).value) || 0;
+    const T2 = parseFloat(document.getElementById('T2'+s).value) || 0;
+    const T3 = parseFloat(document.getElementById('T3'+s).value) || 0;
+    document.getElementById('dT1'+s+'_disp').textContent = (T2-T1).toFixed(1);
+    document.getElementById('dT2'+s+'_disp').textContent = (T1-T3).toFixed(1);
+    document.getElementById('dT3'+s+'_disp').textContent = Math.abs(T2-T3).toFixed(1);
+  });
+}
+
+// ── WIND ──
+function selectWind(speed) {
+  selWind = speed;
+  document.querySelectorAll('.wind-table tbody tr').forEach(r => r.classList.remove('selected-wind'));
+  document.getElementById('wrow_' + speed).classList.add('selected-wind');
+  updateWindFactors();
+}
+
+function updateWindFactors() {
+  const spd = parseInt(document.getElementById('windSpeed').value);
+  selWind = spd;
+  document.querySelectorAll('.wind-table tbody tr').forEach(r => r.classList.remove('selected-wind'));
+  const rowEl = document.getElementById('wrow_' + spd);
+  if (rowEl) rowEl.classList.add('selected-wind');
+  const w = windData[selWind];
+  document.getElementById('wHeatDisp').textContent = w.h.toFixed(2);
+  document.getElementById('wCoolDisp').textContent = w.c.toFixed(2);
+  document.getElementById('wEvapDisp').textContent = w.e.toFixed(2);
+}
+
+// ── SOLAR ──
+function toggleSolar() {
+  const cb = document.getElementById('solarCheck');
+  const inp = document.getElementById('solarInputs');
+  inp.style.opacity = cb.checked ? 1 : 0.4;
+  inp.style.pointerEvents = cb.checked ? '' : 'none';
+}
+
+function updateSolarCalc(area) {
+  if (!area) {
+    const type = document.getElementById('poolType').value;
+    const L = parseFloat(document.getElementById('poolL').value) || 0;
+    const W = parseFloat(document.getElementById('poolW').value) || 0;
+    if (type === 'rect') area = L * W;
+    else if (type === 'oval') area = Math.PI * (L/2) * (W/2);
+    else if (type === 'circular') area = Math.PI * (L/2) * (L/2);
+    else area = parseFloat(document.getElementById('customArea').value) || 50;
+  }
+  const irr = parseFloat(document.getElementById('solarIrr').value) || 866.56;
+  const hrs = parseFloat(document.getElementById('solarHrs').value) || 6.4;
+  const kWh = area * irr / 1000 * hrs;
+  const kW  = kWh / hrs;
+  document.getElementById('solarCalcShow').textContent = kWh.toFixed(2) + ' kWh/day';
+  document.getElementById('solarKWShow').textContent   = kW.toFixed(2) + ' kW';
+}
+
+// ── MAIN CALCULATION ──
+function runCalculation() {
+  const type = document.getElementById('poolType').value;
+  const L = parseFloat(document.getElementById('poolL').value) || 0;
+  const W = parseFloat(document.getElementById('poolW').value) || 0;
+  const Ds = parseFloat(document.getElementById('depthS').value) || 0;
+  const Dd = parseFloat(document.getElementById('depthD').value) || 0;
+  const Davg = (Ds + Dd) / 2;
+
+  // Get area (manual or auto)
+  let area;
+  if (areaManualMode) {
+    area = parseFloat(document.getElementById('areaManual').value) || 0;
+  } else {
+    if (type === 'rect') area = L * W;
+    else if (type === 'oval') area = Math.PI * (L/2) * (W/2);
+    else if (type === 'circular') area = Math.PI * (L/2) * (L/2);
+    else area = parseFloat(document.getElementById('customArea').value) || 50;
+  }
+
+  // Get POOL volume (manual or auto)
+  let poolVolM3;
+  if (volManualMode) {
+    poolVolM3 = parseFloat(document.getElementById('volManual').value) || 0;
+  } else {
+    poolVolM3 = area * Davg;
+  }
+
+  // Add extra system volumes → total volume used in heat-up calculation
+  const ev = getExtraVols();
+  const extraVol = ev.surge + ev.header + ev.balance + ev.extra;
+  const volM3 = poolVolM3 + extraVol;  // TOTAL system water volume
+  const volL  = volM3 * 1000;
+
+  const w = windData[selWind];
+  const enc = parseFloat(document.getElementById('enclosure').value);
+  const theta1 = parseFloat(document.getElementById('theta1').value) || 48;
+  const theta2 = parseFloat(document.getElementById('theta2').value) || 16;
+
+  const solarOn = document.getElementById('solarCheck').checked;
+  const irr = parseFloat(document.getElementById('solarIrr').value) || 866.56;
+  const solarHrs = parseFloat(document.getElementById('solarHrs').value) || 6.4;
+  const solarKWh = solarOn ? (area * irr / 1000 * solarHrs) : 0;
+  const solarKW  = solarOn ? (solarKWh / solarHrs) : 0;
+
+  const calc = (season) => {
+    const T1 = parseFloat(document.getElementById('T1' + season[0]).value);
+    const T2 = parseFloat(document.getElementById('T2' + season[0]).value);
+    const T3 = parseFloat(document.getElementById('T3' + season[0]).value);
+    const dT1 = Math.abs(T2 - T1);
+    const dT2h = Math.max(T2 - T3, 0);
+
+    const needsHeating = T2 > T1;
+    const q1h_raw = needsHeating ? (volM3 * dT1 * 1163) / theta1 / 1000 : 0;
+    const q1h = q1h_raw * w.h * enc;
+    const q2h_raw = (area * dT2h * 20) / theta2 / 1000;
+    const q2h = q2h_raw * w.h * enc;
+    const qhTotal = Math.max(q1h + q2h, 0);
+
+    const needsCooling = T1 > T2;
+    const dT1c = needsCooling ? (T1 - T2) : 0;
+    const q1c_raw = (volM3 * dT1c * 1163) / theta1 / 1000;
+    const q1c = q1c_raw * w.c * enc;
+    const solarAddsToCooling = solarOn && (T3 >= T2);
+    const qsolar = solarAddsToCooling ? solarKW : 0;
+    const qcTotal = Math.max(q1c + qsolar, 0);
+
+    return { T1, T2, T3, dT1, dT2: dT2h, q1h, q2h, qhTotal, q1c, qsolar, qcTotal, theta1, theta2 };
+  };
+
+  results.summer  = calc('summer');
+  results.winter  = calc('winter');
+  results.area    = area;
+  results.volM3   = poolVolM3;   // pool only
+  results.totalVolM3 = volM3;   // total system
+  results.volL    = volL;
+  results.solarKW = solarKW;
+  results.solarKWh = solarKWh;
+
+  renderResults();
+  document.getElementById('resultsSection').classList.add('show');
+  setTimeout(() => document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  if (selectedBrand) renderMatchedModels();
+}
+
+function fmt(v) { return v.toFixed(2) + ' kW'; }
+
+function renderResults() {
+  const rS = results.summer;
+  const rW = results.winter;
+  if (!rS || !rW) return;
+
+  // Summary chips
+  document.getElementById('sum_vol').textContent     = results.volM3.toFixed(2);
+  document.getElementById('sum_totalvol').textContent = results.totalVolM3.toFixed(2);
+  document.getElementById('sum_area').textContent    = results.area.toFixed(2);
+
+  // Summer column
+  document.getElementById('s_q1h').textContent       = fmt(rS.q1h);
+  document.getElementById('s_q2h').textContent       = fmt(rS.q2h);
+  document.getElementById('s_qhTotal').textContent   = fmt(rS.qhTotal);
+  document.getElementById('s_heatRequired').textContent = rS.qhTotal.toFixed(2);
+  document.getElementById('s_q1c').textContent       = fmt(rS.q1c);
+  document.getElementById('s_qsolar').textContent    = fmt(rS.qsolar);
+  document.getElementById('s_qcTotal').textContent   = fmt(rS.qcTotal);
+  document.getElementById('s_coolRequired').textContent = rS.qcTotal.toFixed(2);
+
+  // Winter column
+  document.getElementById('w_q1h').textContent       = fmt(rW.q1h);
+  document.getElementById('w_q2h').textContent       = fmt(rW.q2h);
+  document.getElementById('w_qhTotal').textContent   = fmt(rW.qhTotal);
+  document.getElementById('w_heatRequired').textContent = rW.qhTotal.toFixed(2);
+  document.getElementById('w_q1c').textContent       = fmt(rW.q1c);
+  document.getElementById('w_qsolar').textContent    = fmt(rW.qsolar);
+  document.getElementById('w_qcTotal').textContent   = fmt(rW.qcTotal);
+  document.getElementById('w_coolRequired').textContent = rW.qcTotal.toFixed(2);
+
+  // Governing design loads
+  const govHeat = Math.max(rS.qhTotal, rW.qhTotal);
+  const govCool = Math.max(rS.qcTotal, rW.qcTotal);
+  document.getElementById('gov_heat').textContent = govHeat.toFixed(2);
+  document.getElementById('gov_cool').textContent = govCool.toFixed(2);
+  document.getElementById('gov_heat_sub').textContent = `kW — governing: ${rS.qhTotal >= rW.qhTotal ? 'Summer' : 'Winter'}`;
+  document.getElementById('gov_cool_sub').textContent = `kW — governing: ${rS.qcTotal >= rW.qcTotal ? 'Summer' : 'Winter'}`;
+
+  updateUnitSufficiency();
+}
+
+function showSeason(s) { /* kept for legacy refs */ }
+
+// ── UNIT SUMMARY ──
+function updateUnitSummary() {
+  updateUnitSufficiency();
+  const hBrand = document.getElementById('heaterBrand').value || '—';
+  const hModel = document.getElementById('heaterModel').value || '—';
+  const hKW    = parseFloat(document.getElementById('heaterKW').value) || 0;
+  const hQty   = parseFloat(document.getElementById('heaterQty').value) || 1;
+  const cKW    = parseFloat(document.getElementById('chillerKW').value) || 0;
+  const cQty   = parseFloat(document.getElementById('chillerQty').value) || 1;
+  const rS = results.summer || {};
+  const rW = results.winter || {};
+
+  // Use GOVERNING (maximum) load across both seasons
+  const reqHeat = Math.max(rS.qhTotal || 0, rW.qhTotal || 0);
+  const reqCool = Math.max(rS.qcTotal || 0, rW.qcTotal || 0);
+  const instHeat = hKW * hQty;
+  const instCool = cKW * cQty;
+
+  const items = [
+    { label: 'Selected Equipment', brand: hBrand, model: hModel, val: '', sub: '', wide: true },
+    { label: 'No. of Units', val: `${hQty} unit${hQty > 1 ? 's' : ''}`, sub: 'Heat pump(s) selected' },
+    { label: 'Installed Heating', val: instHeat.toFixed(1) + ' kW', sub: `${hQty} × ${hKW} kW` },
+    { label: 'Required Heating', val: reqHeat.toFixed(1) + ' kW', sub: instHeat >= reqHeat ? '✅ Adequate' : '⚠️ Undersized', ok: instHeat >= reqHeat },
+    { label: 'Installed Cooling', val: instCool.toFixed(1) + ' kW', sub: `${cQty} × ${cKW} kW` },
+    { label: 'Required Cooling', val: reqCool.toFixed(1) + ' kW', sub: instCool >= reqCool ? '✅ Adequate' : '⚠️ Undersized', ok: instCool >= reqCool },
+  ];
+
+  document.getElementById('unitSumContent').innerHTML = items.map(i => `
+    <div class="unit-sum-item${i.wide ? ' unit-sum-wide' : ''}">
+      <div class="unit-sum-label">${i.label}</div>
+      ${i.wide ? `
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:4px">
+          <div style="text-align:center">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.4);margin-bottom:3px">Brand</div>
+            <div class="unit-sum-val" style="font-size:18px">${i.brand}</div>
+          </div>
+          <div style="width:1px;height:40px;background:rgba(255,255,255,0.12)"></div>
+          <div style="text-align:center">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.4);margin-bottom:3px">Model</div>
+            <div class="unit-sum-val" style="font-size:18px;color:#30D158">${i.model}</div>
+          </div>
+        </div>
+      ` : `
+        <div class="unit-sum-val" style="${i.ok === false ? 'color:#FF453A' : i.ok === true ? 'color:#30D158' : ''}">${i.val}</div>
+        ${i.sub ? `<div class="unit-sum-sub" style="${i.ok === false ? 'color:#FF453A' : i.ok === true ? 'color:#30D158' : ''}">${i.sub}</div>` : ''}
+      `}
+    </div>
+  `).join('');
+
+  document.getElementById('unitSummaryBox').classList.add('show');
+}
+
+function updateUnitSufficiency() {
+  const hKW  = parseFloat(document.getElementById('heaterKW').value)  || 0;
+  const hQty = parseFloat(document.getElementById('heaterQty').value) || 1;
+  const cKW  = parseFloat(document.getElementById('chillerKW').value) || 0;
+  const rS   = results.summer || {};
+  const rW   = results.winter || {};
+
+  const chillerQtyEl = document.getElementById('chillerQty');
+  if (chillerQtyEl) chillerQtyEl.value = hQty;
+
+  const hBrand = document.getElementById('heaterBrand').value || '';
+  const hModel = document.getElementById('heaterModel').value || '';
+  const cBrandEl = document.getElementById('chillerBrand');
+  const cModelEl = document.getElementById('chillerModel');
+  if (cBrandEl) cBrandEl.value = hBrand;
+  if (cModelEl) cModelEl.value = hModel;
+
+  const hTotal = hKW * hQty;
+  const cTotal = cKW * hQty;
+
+  document.getElementById('heaterTotalKW').textContent = hTotal > 0 ? hTotal.toFixed(1) + ' kW' : '— kW';
+  document.getElementById('chillerTotalKW').textContent = cTotal > 0 ? cTotal.toFixed(1) + ' kW' : '— kW';
+
+  const reqHeat = Math.max(rS.qhTotal || 0, rW.qhTotal || 0);
+  const reqCool = Math.max(rS.qcTotal || 0, rW.qcTotal || 0);
+
+  if (reqHeat > 0 && hTotal > 0) {
+    const ok = hTotal >= reqHeat;
+    document.getElementById('heaterSufficiency').textContent = ok
+      ? `✅ OK — Required: ${reqHeat.toFixed(1)} kW`
+      : `⚠️ Undersized — Need: ${reqHeat.toFixed(1)} kW`;
+    document.getElementById('heaterSufficiency').style.color = ok ? 'var(--ios-green)' : 'var(--ios-red)';
+  }
+
+  if (reqCool > 0 && cTotal > 0) {
+    const ok = cTotal >= reqCool;
+    document.getElementById('chillerSufficiency').textContent = ok
+      ? `✅ OK — Required: ${reqCool.toFixed(1)} kW`
+      : `⚠️ Undersized — Need: ${reqCool.toFixed(1)} kW`;
+    document.getElementById('chillerSufficiency').style.color = ok ? 'var(--ios-green)' : 'var(--ios-red)';
+  }
+}
+
+['heaterKW','heaterQty','chillerKW','heaterBrand','heaterModel'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateUnitSufficiency);
+});
+
+// ══════════════════════════════════════════════════════════
+// BRAND DATABASE
+// ══════════════════════════════════════════════════════════
+const BRANDS = {
+  'AQUA': {
+    name: 'AQUA Middle East',
+    color: '#6b21a8',
+    note: 'Air-to-Water Heating/Cooling Pump (60Hz, R410A)',
+    models: [
+      { model:'PH2-02620-60HZ', heatKW:9.6,   coolKW:6.9,  powerS:'220~240/1/50', powerKW:2.7,  cop:5.58, eer:3.11, discharge:'Top' },
+      { model:'PH2-02625-60HZ', heatKW:12.0,  coolKW:9.0,  powerS:'220~240/1/50', powerKW:3.6,  cop:5.39, eer:3.00, discharge:'Top' },
+      { model:'PH2-02630-60HZ-1',heatKW:14.0, coolKW:10.0, powerS:'220~240/1/50', powerKW:4.3,  cop:5.50, eer:2.90, discharge:'Top' },
+      { model:'PH2-02630-60HZ-2',heatKW:15.4, coolKW:11.0, powerS:'380~415/3/50', powerKW:5.3,  cop:5.04, eer:2.66, discharge:'Top' },
+      { model:'PH2-02640-60HZ',  heatKW:18.0, coolKW:13.0, powerS:'380~415/3/50', powerKW:5.6,  cop:5.25, eer:2.47, discharge:'Top' },
+      { model:'PH2-02650-60HZ',  heatKW:23.1, coolKW:17.0, powerS:'380~415/3/50', powerKW:7.2,  cop:4.88, eer:2.75, discharge:'Top' },
+      { model:'PH2-02660-60HZ',  heatKW:27.5, coolKW:20.0, powerS:'380~415/3/50', powerKW:9.0,  cop:4.77, eer:2.75, discharge:'Top' },
+      { model:'PH2-02670-60HZ',  heatKW:34.1, coolKW:25.0, powerS:'380~415/3/50', powerKW:11.0, cop:4.95, eer:2.80, discharge:'Top' },
+      { model:'PH2-02680-R410A', heatKW:35.0, coolKW:25.0, powerS:'380~415/3/50', powerKW:10.4, cop:5.50, eer:3.00, discharge:'Top' },
+      { model:'PH2-02685-R410A', heatKW:41.0, coolKW:30.0, powerS:'380~415/3/50', powerKW:11.5, cop:5.45, eer:3.10, discharge:'Top' },
+      { model:'PH2-02690-60HZ',  heatKW:46.8, coolKW:33.0, powerS:'380~415/3/50', powerKW:14.6, cop:5.40, eer:3.00, discharge:'Top' },
+      { model:'PH2-02695-60HZ',  heatKW:54.2, coolKW:37.0, powerS:'380~415/3/50', powerKW:17.3, cop:5.31, eer:2.84, discharge:'Top' },
+      { model:'PH2-02710-60HZ',  heatKW:44.0, coolKW:32.0, powerS:'380~415/3/50', powerKW:14.0, cop:5.04, eer:2.82, discharge:'Top' },
+      { model:'PH2-02712-60HZ',  heatKW:47.3, coolKW:34.0, powerS:'380~415/3/50', powerKW:14.3, cop:5.29, eer:2.97, discharge:'Top' },
+      { model:'PH2-02713-60HZ',  heatKW:60.5, coolKW:43.6, powerS:'380~415/3/50', powerKW:20.6, cop:4.71, eer:2.61, discharge:'Top' },
+      { model:'PH2-02714-60HZ',  heatKW:73.1, coolKW:51.0, powerS:'380~415/3/50', powerKW:22.4, cop:5.11, eer:2.84, discharge:'Top' },
+      { model:'PH2-02715-60HZ',  heatKW:82.0, coolKW:59.0, powerS:'380~415/3/50', powerKW:24.5, cop:5.50, eer:2.98, discharge:'Top' },
+      { model:'PH2-02720-60HZ',  heatKW:100.0,coolKW:72.0, powerS:'380~415/3/50', powerKW:32.3, cop:5.50, eer:2.90, discharge:'Top' },
+      { model:'PH2-02730-60HZ',  heatKW:135.0,coolKW:97.0, powerS:'380~415/3/50', powerKW:39.6, cop:5.50, eer:3.20, discharge:'Top' },
+      { model:'PH2-02740-60HZ',  heatKW:160.0,coolKW:115.0,powerS:'380~415/3/50', powerKW:48.4, cop:5.50, eer:3.20, discharge:'Top' },
+      { model:'PH2-02750-60HZ',  heatKW:180.0,coolKW:130.0,powerS:'380~415/3/50', powerKW:51.7, cop:5.50, eer:3.10, discharge:'Top' },
+      { model:'PH2-02760-60HZ',  heatKW:220.0,coolKW:157.0,powerS:'380~415/3/50', powerKW:65.3, cop:5.26, eer:3.00, discharge:'Top' },
+      { model:'PH2-02780-60HZ',  heatKW:350.0,coolKW:252.0,powerS:'380~415/3/50', powerKW:105.3,cop:5.50, eer:2.96, discharge:'Top' },
+      { model:'PHFD2-02610-60HZ',heatKW:5.3,  coolKW:3.7,  powerS:'220/1/60',     powerKW:1.6,  cop:5.25, eer:2.90, discharge:'Front' },
+      { model:'PHFD2-02620-60HZ',heatKW:8.6,  coolKW:6.0,  powerS:'220~240/1/50', powerKW:2.9,  cop:5.44, eer:3.01, discharge:'Front' },
+      { model:'PHFD2-02650-60HZ',heatKW:23.5, coolKW:16.6, powerS:'380-415/3/60', powerKW:7.2,  cop:4.95, eer:2.66, discharge:'Front' },
+      { model:'PHFD2-02670-60HZ',heatKW:34.7, coolKW:24.6, powerS:'380-415/3/60', powerKW:11.0, cop:4.95, eer:2.85, discharge:'Front' },
+      { model:'PHFD2-02715-60HZ',heatKW:85.5, coolKW:59.9, powerS:'380-415/3/60', powerKW:25.0, cop:5.31, eer:2.86, discharge:'Front' },
+      { model:'PHFD2-02720-60HZ',heatKW:108.0,coolKW:75.6, powerS:'380-415/3/60', powerKW:33.5, cop:5.27, eer:2.80, discharge:'Front' },
+    ]
+  },
+  'AQUATECH': {
+    name: 'AQUATECH',
+    color: '#0e7490',
+    note: 'AQUATECH Air Source Standard Heat Pump — Reversible (R417A / R407C)',
+    models: [
+      { model:'WM018', heatKW:8.8,   coolKW:5.8,  powerS:'220-240/1/50Hz', powerKW:1.8,   cop:5.5, eer:3.2 },
+      { model:'WM024', heatKW:14.5,  coolKW:8.5,  powerS:'220-240/1/50Hz', powerKW:2.8,   cop:5.6, eer:3.0 },
+      { model:'WM036', heatKW:17.5,  coolKW:11.5, powerS:'380-400/3/50Hz', powerKW:3.77,  cop:5.7, eer:3.0 },
+      { model:'WM050', heatKW:21.0,  coolKW:14.5, powerS:'380-400/3/50Hz', powerKW:4.8,   cop:5.7, eer:3.0 },
+      { model:'WM060', heatKW:25.0,  coolKW:17.5, powerS:'380-400/3/50Hz', powerKW:5.83,  cop:5.6, eer:3.0 },
+      { model:'WM090', heatKW:35.0,  coolKW:25.0, powerS:'380-400/3/50Hz', powerKW:8.22,  cop:5.6, eer:3.0 },
+      { model:'WM120', heatKW:45.0,  coolKW:35.0, powerS:'380-400/3/50Hz', powerKW:11.55, cop:5.5, eer:3.0 },
+      { model:'WM150', heatKW:62.0,  coolKW:45.0, powerS:'380-400/3/50Hz', powerKW:14.7,  cop:5.8, eer:3.0 },
+      { model:'WM180', heatKW:90.0,  coolKW:60.0, powerS:'380-400/3/50Hz', powerKW:19.6,  cop:5.7, eer:3.0 },
+      { model:'WM240', heatKW:120.0, coolKW:75.0, powerS:'380-400/3/50Hz', powerKW:24.6,  cop:5.7, eer:3.0 },
+      { model:'WM360', heatKW:148.4, coolKW:99.0, powerS:'380-400/3/50Hz', powerKW:33.0,  cop:5.7, eer:3.0 },
+      { model:'WM400', heatKW:160.0, coolKW:120.0,powerS:'380-400/3/50Hz', powerKW:39.0,  cop:5.7, eer:3.0 },
+      { model:'WM500', heatKW:210.0, coolKW:150.0,powerS:'380-400/3/50Hz', powerKW:48.38, cop:5.8, eer:3.1 },
+      { model:'WM600', heatKW:250.0, coolKW:170.0,powerS:'380-400/3/50Hz', powerKW:55.0,  cop:5.8, eer:3.1 },
+    ]
+  },
+  'PROTEAM_STD': {
+    name: 'PROTEAM Europa — Standard',
+    color: '#b91c1c',
+    note: 'PROTEAM Europa Standard Heat & Chill Pump (R407C)',
+    models: [
+      { model:'00500188', heatKW:8.8,   coolKW:5.8,  powerS:'230/1/50Hz', powerKW:2.1,  cop:4.9 },
+      { model:'00500133', heatKW:13.0,  coolKW:8.8,  powerS:'230/1/50Hz', powerKW:2.85, cop:4.9 },
+      { model:'00500117', heatKW:17.0,  coolKW:12.0, powerS:'230/1/50Hz', powerKW:3.9,  cop:4.8 },
+      { model:'00500170', heatKW:17.0,  coolKW:12.0, powerS:'380/3/50Hz', powerKW:3.9,  cop:4.8 },
+      { model:'00500121', heatKW:21.0,  coolKW:14.5, powerS:'380/3/50Hz', powerKW:5.2,  cop:4.8 },
+      { model:'00500125', heatKW:25.0,  coolKW:17.4, powerS:'380/3/50Hz', powerKW:5.8,  cop:4.9 },
+      { model:'00500350', heatKW:35.0,  coolKW:25.0, powerS:'380/3/50Hz', powerKW:8.4,  cop:4.8 },
+      { model:'00500450', heatKW:45.0,  coolKW:34.0, powerS:'380/3/50Hz', powerKW:9.0,  cop:4.9 },
+      { model:'00500550', heatKW:55.0,  coolKW:42.0, powerS:'380/3/50Hz', powerKW:10.3, cop:4.9 },
+      { model:'00500900', heatKW:90.0,  coolKW:70.0, powerS:'380/3/50Hz', powerKW:17.8, cop:4.7 },
+      { model:'00500160', heatKW:160.0, coolKW:120.0,powerS:'380/3/50Hz', powerKW:41.6, cop:4.7 },
+      { model:'00500210', heatKW:210.0, coolKW:150.0,powerS:'380/3/50Hz', powerKW:56.2, cop:4.5 },
+      { model:'00500300', heatKW:250.0, coolKW:210.0,powerS:'380/3/50Hz', powerKW:51.8, cop:5.7 },
+      { model:'00500400', heatKW:300.0, coolKW:250.0,powerS:'380/3/50Hz', powerKW:78.0, cop:5.0 },
+    ]
+  },
+  'PROTEAM_INV': {
+    name: 'PROTEAM Europa — Inverter',
+    color: '#c2410c',
+    note: 'PROTEAM Europa Inverter Heat & Chill Pump (R32/R410a)',
+    models: [
+      { model:'00600010', heatKW:5.3,  coolKW:2.8,  powerS:'230/1/50Hz', powerKW:0.88, cop:14.5, eer:7.55 },
+      { model:'00600011', heatKW:7.2,  coolKW:3.6,  powerS:'230/1/50Hz', powerKW:1.19, cop:14.55,eer:7.53 },
+      { model:'00600012', heatKW:9.2,  coolKW:4.6,  powerS:'230/1/50Hz', powerKW:1.28, cop:14.71,eer:7.46 },
+      { model:'00600013', heatKW:10.9, coolKW:6.0,  powerS:'230/1/50Hz', powerKW:1.74, cop:14.8, eer:7.34 },
+      { model:'00600014', heatKW:14.3, coolKW:7.87, powerS:'230/1/50Hz', powerKW:2.32, cop:14.62,eer:7.42 },
+      { model:'00600015', heatKW:17.4, coolKW:9.6,  powerS:'230/1/50Hz', powerKW:2.85, cop:14.5, eer:7.4  },
+      { model:'00600016', heatKW:21.2, coolKW:11.5, powerS:'230/1/50Hz', powerKW:3.38, cop:14.55,eer:7.48 },
+      { model:'00600017', heatKW:25.1, coolKW:13.9, powerS:'230/1/50Hz', powerKW:3.8,  cop:14.52,eer:7.22 },
+      { model:'00660100', heatKW:30.11,coolKW:15.56,powerS:'380/3/50Hz', powerKW:4.32, cop:6.97, eer:6.68 },
+      { model:'00660200', heatKW:42.15,coolKW:23.15,powerS:'380/3/50Hz', powerKW:6.04, cop:6.98, eer:6.67 },
+      { model:'00660300', heatKW:70.0, coolKW:38.0, powerS:'380/3/50Hz', powerKW:10.03,cop:6.98, eer:6.69 },
+      { model:'00660400', heatKW:103.0,coolKW:58.0, powerS:'380/3/50Hz', powerKW:14.8, cop:6.96, eer:6.68 },
+      { model:'00660500', heatKW:136.0,coolKW:76.0, powerS:'380/3/50Hz', powerKW:19.46,cop:6.99, eer:6.74 },
+    ]
+  },
+  'FLUIDRA': {
+    name: 'Fluidra / Astral',
+    color: '#0369a1',
+    note: 'AHP Series Commercial Pool Heat Pump (R410A)',
+    models: [
+      { model:'AHP 030-R410', heatKW:14.0, coolKW:9.0,  powerS:'220-240V/1/50Hz', powerKW:3.251, cop:5.04, eer:3.14 },
+      { model:'AHP 050-R410', heatKW:24.0, coolKW:16.0, powerS:'380V/3/50Hz',      powerKW:6.88,  cop:5.11, eer:3.23 },
+      { model:'AHP 060-R410', heatKW:29.0, coolKW:18.0, powerS:'380V/3/50Hz',      powerKW:7.2,   cop:5.18, eer:3.13 },
+      { model:'AHP 080-R4',   heatKW:35.0, coolKW:25.0, powerS:'380V/3/50Hz',      powerKW:10.0,  cop:4.61, eer:2.98 },
+      { model:'AHP 100-R410', heatKW:50.0, coolKW:32.0, powerS:'380V/3/50Hz',      powerKW:12.13, cop:5.13, eer:3.25 },
+      { model:'AHP 130-R410', heatKW:65.0, coolKW:42.0, powerS:'380V/3/50Hz',      powerKW:14.0,  cop:5.00, eer:3.10 },
+      { model:'AHP 200-R410', heatKW:100.0,coolKW:65.0, powerS:'380V/3/50Hz',      powerKW:21.0,  cop:5.00, eer:3.10 },
+      { model:'AHP 250-R410', heatKW:120.0,coolKW:80.0, powerS:'380V/3/50Hz',      powerKW:24.0,  cop:5.00, eer:3.10 },
+      { model:'AHP 400-R4',   heatKW:180.0,coolKW:120.0,powerS:'380V/3/50Hz',      powerKW:38.0,  cop:5.00, eer:3.10 },
+      { model:'AHP 500-R410', heatKW:250.0,coolKW:165.0,powerS:'380V/3/50Hz',      powerKW:50.0,  cop:5.00, eer:3.10 },
+    ]
+  }
+};
+
+// ── BRAND SELECTOR STATE ──
+let selectedBrand = null;
+let selectedQty   = 1;
+let selectedHeatModel = null;
+let selectedCoolModel = null;
+let selectionMode = 'brand';
+let _heatCandidates = [];
+
+function setSelectionMode(mode) {
+  selectionMode = mode;
+  document.getElementById('panel_brand').style.display  = mode === 'brand'  ? 'block' : 'none';
+  document.getElementById('panel_manual').style.display = mode === 'manual' ? 'block' : 'none';
+  document.getElementById('modeBtn_brand').classList.toggle('active', mode === 'brand');
+  document.getElementById('modeBtn_manual').classList.toggle('active', mode === 'manual');
+}
+
+function initBrandButtons() {
+  const container = document.getElementById('brandBtns');
+  container.innerHTML = '';
+  Object.entries(BRANDS).forEach(([key, brand]) => {
+    const btn = document.createElement('button');
+    btn.className = 'brand-pill';
+    btn.id = 'brandBtn_' + key;
+    btn.textContent = brand.name.replace('PROTEAM Europa — ', 'PROTEAM ');
+    btn.onclick = () => selectBrand(key);
+    container.appendChild(btn);
+  });
+}
+
+function selectBrand(key) {
+  selectedBrand = key;
+  selectedHeatModel = null;
+  selectedCoolModel = null;
+  Object.keys(BRANDS).forEach(k => {
+    const btn = document.getElementById('brandBtn_' + k);
+    if (btn) {
+      if (k === key) {
+        btn.classList.add('active');
+        btn.style.background = BRANDS[k].color;
+        btn.style.borderColor = BRANDS[k].color;
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.borderColor = '';
+      }
+    }
+  });
+  renderMatchedModels();
+}
+
+function setUnitQty(qty) {
+  selectedQty = qty;
+  [1,2,3,4].forEach(n => {
+    document.getElementById('qtyBtn_' + n).classList.toggle('active', n === qty);
+  });
+  renderMatchedModels();
+}
+
+function renderMatchedModels() {
+  const area = document.getElementById('matchedModelsArea');
+  const grid = document.getElementById('matchedModelsGrid');
+  if (!selectedBrand) return;
+
+  const rS = results.summer || {};
+  const rW = results.winter || {};
+  const reqHeat = Math.max(rS.qhTotal || 0, rW.qhTotal || 0);
+  const reqCool = Math.max(rS.qcTotal || 0, rW.qcTotal || 0);
+  const hasCalc = reqHeat > 0 || reqCool > 0;
+
+  const perUnitHeat = reqHeat / selectedQty;
+  const perUnitCool = reqCool / selectedQty;
+  const brand  = BRANDS[selectedBrand];
+  const sorted = [...brand.models].sort((a, b) => a.heatKW - b.heatKW);
+
+  let recommended = null;
+  let backup = null;
+  if (hasCalc) {
+    const fit = sorted.filter(m => m.heatKW >= perUnitHeat && m.coolKW >= perUnitCool);
+    recommended = fit.length > 0 ? fit[0] : sorted[sorted.length - 1];
+    backup = fit.length > 1 ? fit[1] : null;
+  } else {
+    recommended = sorted[0];
+    backup = sorted[1] || null;
+  }
+
+  _heatCandidates = backup ? [recommended, backup] : [recommended];
+
+  area.style.display = 'block';
+  let html = '';
+
+  if (!hasCalc) {
+    html += `<div class="no-calc-notice">⚠️ <strong>Run the calculation first</strong> to see the correct unit recommendation.</div>`;
+  }
+
+  // Load summary
+  if (hasCalc) {
+    const noFit = !sorted.some(m => m.heatKW >= perUnitHeat && m.coolKW >= perUnitCool);
+    html += `
+    <div class="load-summary">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5)">📊 Load — ${selectedQty} Unit${selectedQty>1?'s':''}</div>
+        <div style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7)">
+          ${noFit ? '⚠️ Exceeds range' : (perUnitHeat >= perUnitCool ? '🔥 Heat governing' : '❄️ Cool governing')}
+        </div>
+      </div>
+      <div class="load-sum-grid">
+        <div class="load-chip heat">
+          <div class="lc-lbl">Total Heating</div>
+          <div class="lc-val">${reqHeat.toFixed(1)} kW</div>
+          <div class="lc-sub">${perUnitHeat.toFixed(1)} kW / unit</div>
+        </div>
+        <div class="load-chip cool">
+          <div class="lc-lbl">Total Cooling</div>
+          <div class="lc-val">${reqCool.toFixed(1)} kW</div>
+          <div class="lc-sub">${perUnitCool.toFixed(1)} kW / unit</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function modelCard(m, idx, isRec) {
+    if (!m) return '';
+    const tH = +(m.heatKW * selectedQty).toFixed(2);
+    const tC = +(m.coolKW * selectedQty).toFixed(2);
+    const hOk = !hasCalc || tH >= reqHeat;
+    const cOk = !hasCalc || tC >= reqCool;
+    const bothOk = hOk && cOk;
+    const isSel = selectedHeatModel && selectedHeatModel.model === m.model;
+
+    const hPct  = hasCalc && reqHeat > 0 ? (tH / reqHeat * 100 - 100).toFixed(0) : null;
+    const cPct  = hasCalc && reqCool > 0 ? (tC / reqCool * 100 - 100).toFixed(0) : null;
+
+    const tagClass  = isRec ? (bothOk ? 'tag-recommended' : 'tag-best') : 'tag-backup';
+    const tagText   = isRec ? (bothOk ? '✅ RECOMMENDED' : '⚠️ BEST AVAILABLE') : '📋 BACKUP';
+    const hdrClass  = isRec ? (bothOk ? 'ok-bg' : 'bad-bg') : 'gray-bg';
+    const cardClass = isSel ? 'selected' : (isRec ? (bothOk ? 'recommended' : 'best-available') : '');
+
+    return `
+    <div class="model-card ${cardClass}">
+      <div class="mc-header ${hdrClass}">
+        <div>
+          <div class="mc-model-name">${m.model}</div>
+          <div class="mc-brand-name">${brand.name}</div>
+        </div>
+        <div class="mc-badge-tag ${tagClass}">${tagText}</div>
+      </div>
+      <div class="mc-caps">
+        <div class="cap-box ${hOk ? 'heat-ok' : 'heat-bad'}">
+          <div class="cap-lbl heat">🔥 Heating Output</div>
+          <div class="cap-kw heat">${m.heatKW} <span style="font-size:14px;font-weight:500;color:var(--label3)">kW/unit</span></div>
+          <div class="cap-per">× ${selectedQty} = <strong style="color:${hOk?'var(--ios-green)':'var(--ios-red)'}">${tH.toFixed(1)} kW</strong></div>
+          ${hasCalc ? `<div class="cap-status ${hOk?'status-ok':'status-bad'}">${hOk ? '✅ +'+((tH-reqHeat).toFixed(1))+' kW' : '⚠️ '+(Math.abs(tH-reqHeat).toFixed(1))+' kW short'}</div>` : ''}
+        </div>
+        <div class="cap-box ${cOk ? 'cool-ok' : 'cool-bad'}">
+          <div class="cap-lbl cool">❄️ Cooling Output</div>
+          <div class="cap-kw cool">${m.coolKW} <span style="font-size:14px;font-weight:500;color:var(--label3)">kW/unit</span></div>
+          <div class="cap-per">× ${selectedQty} = <strong style="color:${cOk?'var(--ios-green)':'var(--ios-red)'}">${tC.toFixed(1)} kW</strong></div>
+          ${hasCalc ? `<div class="cap-status ${cOk?'status-ok':'status-bad'}">${cOk ? '✅ +'+((tC-reqCool).toFixed(1))+' kW' : '⚠️ '+(Math.abs(tC-reqCool).toFixed(1))+' kW short'}</div>` : ''}
+        </div>
+      </div>
+      <div class="mc-elec">
+        <div class="elec-item"><div class="e-lbl">Input/unit</div><div class="e-val">${m.powerKW} kW</div></div>
+        <div class="elec-item"><div class="e-lbl">Power supply</div><div class="e-val" style="font-size:11px">${m.powerS}</div></div>
+        <div class="elec-item"><div class="e-lbl">COP / EER</div><div class="e-val">${m.cop}${m.eer ? ' / '+m.eer : ''}</div></div>
+      </div>
+      <div class="mc-footer">
+        <div style="font-size:12px;color:var(--label3)">${m.discharge ? 'Fan: '+m.discharge+' discharge' : ''}</div>
+        <button class="select-unit-btn ${isSel?'selected-btn':''}" onclick="selectModel(${idx})">
+          ${isSel ? '✅ Selected' : 'Select Unit'}
+        </button>
+      </div>
+    </div>`;
+  }
+
+  html += modelCard(recommended, 0, true);
+
+  if (backup) {
+    html += `<div style="padding:6px 16px 4px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--label3)">📋 Next size up — backup option</div>`;
+    html += modelCard(backup, 1, false);
+  }
+
+  // Selection confirmation
+  if (selectedHeatModel) {
+    const m   = selectedHeatModel;
+    const tH  = (m.heatKW * selectedQty).toFixed(1);
+    const tC  = (m.coolKW * selectedQty).toFixed(1);
+    const hOk = +tH >= reqHeat;
+    const cOk = +tC >= reqCool;
+    const hS  = (+tH - reqHeat).toFixed(1);
+    const cS  = (+tC - reqCool).toFixed(1);
+
+    html += `
+    <div class="sel-summary">
+      <div class="sel-summary-header">📋 Selection Confirmed: ${selectedQty} × ${m.model} (${brand.name})</div>
+      <table class="sel-table">
+        <thead>
+          <tr><th>Mode</th><th>Required</th><th>Per Unit</th><th>Installed</th><th>Surplus</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:#FF6B35;font-weight:700">🔥 Heating</td>
+            <td>${reqHeat.toFixed(1)} kW</td>
+            <td>${m.heatKW} kW</td>
+            <td style="font-weight:700;color:${hOk?'var(--ios-green)':'var(--ios-red)'}">${tH} kW</td>
+            <td style="color:${hOk?'var(--ios-green)':'var(--ios-red)'}">${+hS>=0?'+':''}${hS} kW</td>
+            <td><span class="cap-status ${hOk?'status-ok':'status-bad'}">${hOk?'✅ OK':'⚠️ SHORT'}</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--ios-blue);font-weight:700">❄️ Cooling</td>
+            <td>${reqCool.toFixed(1)} kW</td>
+            <td>${m.coolKW} kW</td>
+            <td style="font-weight:700;color:${cOk?'var(--ios-green)':'var(--ios-red)'}">${tC} kW</td>
+            <td style="color:${cOk?'var(--ios-green)':'var(--ios-red)'}">${+cS>=0?'+':''}${cS} kW</td>
+            <td><span class="cap-status ${cOk?'status-ok':'status-bad'}">${cOk?'✅ OK':'⚠️ SHORT'}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function selectModel(idx) {
+  const m = _heatCandidates[idx];
+  if (!m) return;
+  selectedHeatModel = m;
+  selectedCoolModel = m;
+  const brandName = BRANDS[selectedBrand].name;
+  document.getElementById('heaterBrand').value  = brandName;
+  document.getElementById('heaterModel').value  = m.model;
+  document.getElementById('heaterKW').value     = m.heatKW;
+  document.getElementById('heaterQty').value    = selectedQty;
+  document.getElementById('chillerBrand').value = brandName;
+  document.getElementById('chillerModel').value = m.model;
+  document.getElementById('chillerKW').value    = m.coolKW;
+  document.getElementById('chillerQty').value   = selectedQty;
+  updateUnitSufficiency();
+  renderMatchedModels();
+}
+
+// Initialize brand buttons
+initBrandButtons();
+
+function ensureHiddenFields() {
+  ['heaterBrand','heaterModel','heaterKW','heaterQty',
+   'chillerBrand','chillerModel','chillerKW','chillerQty',
+   'comboCheck','comboBrand','comboModel','comboQty'].forEach(id => {
+    if (!document.getElementById(id)) {
+      const inp = document.createElement('input');
+      inp.type = 'hidden'; inp.id = id; inp.value = '';
+      document.body.appendChild(inp);
+    }
+  });
+}
+ensureHiddenFields();
+
+// ── PDF GENERATION ──
+function generatePDF() {
+  const projectName    = document.getElementById('projectName').value    || 'Swimming Pool Project';
+  const mainContractor = document.getElementById('mainContractor').value || '—';
+  const consultantName = document.getElementById('consultantName').value || '—';
+  const subContractor  = document.getElementById('subContractor').value  || '—';
+  const location       = document.getElementById('projectLocation').value || '—';
+  const dateInput = document.getElementById('projectDate').value;
+  const date = dateInput
+    ? new Date(dateInput).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+    : new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+  const rS = results.summer || {};
+  const rW = results.winter || {};
+
+  if (!rS.qhTotal && !rS.qcTotal) {
+    alert('Please click "Calculate" first before downloading the PDF report.');
+    return;
+  }
+
+  const hBrand = document.getElementById('heaterBrand').value || '—';
+  const hModel = document.getElementById('heaterModel').value || '—';
+  const hKW    = parseFloat(document.getElementById('heaterKW').value)    || 0;
+  const hQty   = parseFloat(document.getElementById('heaterQty').value)   || 1;
+  const cKW    = parseFloat(document.getElementById('chillerKW').value)   || 0;
+
+  const reqHeat = Math.max(rS.qhTotal || 0, rW.qhTotal || 0);
+  const reqCool = Math.max(rS.qcTotal || 0, rW.qcTotal || 0);
+  const instHeat = hKW * hQty;
+  const instCool = cKW * hQty;
+
+  function n2(v) { return (+(v||0)).toFixed(2); }
+
+  const area = results.area || 0;
+  const vol  = results.volM3 || 0;
+  const totalVol = results.totalVolM3 || vol;
+
+  const H = [];
+  H.push('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">');
+  H.push('<title>POOL HEAT COOL UNIT SIZING — ' + projectName + '</title>');
+  H.push('<style>');
+
+  // ── Reset & base ──
+  H.push(`
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 10pt; }
+    body {
+      font-family: 'Arial', Helvetica, sans-serif;
+      font-size: 10pt;
+      color: #0d1a26;
+      background: #ffffff;
+      line-height: 1.45;
+    }
+
+    /* ── PAGE LAYOUT ── */
+    .page {
+      width: 210mm;
+      margin: 0 auto;
+      padding: 14mm 16mm 14mm;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      background: #0d2137;
+      color: white;
+      padding: 14pt 18pt 12pt;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14pt;
+    }
+    .doc-title {
+      font-size: 17pt;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .doc-subtitle {
+      font-size: 8.5pt;
+      color: rgba(255,255,255,0.65);
+      margin-top: 4pt;
+      letter-spacing: 0.5px;
+    }
+    .doc-meta {
+      text-align: right;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+    }
+    .doc-meta strong { color: white; }
+
+    /* ── SECTION BLOCK ── */
+    .section {
+      margin-bottom: 12pt;
+      border: 1.5px solid #d0d9e3;
+      border-radius: 4pt;
+      overflow: hidden;
+    }
+    .section-hdr {
+      background: #0d2137;
+      color: white;
+      padding: 6pt 10pt;
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .section-hdr.blue  { background: #1a5fa8; }
+    .section-hdr.teal  { background: #006f8c; }
+    .section-hdr.green { background: #1a6e38; }
+
+    /* ── TABLES ── */
+    table { width: 100%; border-collapse: collapse; }
+    thead tr th {
+      background: #1e3a5c;
+      color: #ffffff;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 5pt 9pt;
+      text-align: left;
+      letter-spacing: 0.3px;
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+    thead tr th:last-child { border-right: none; }
+    tbody tr td {
+      font-size: 9pt;
+      color: #0d1a26;
+      padding: 5.5pt 9pt;
+      border-bottom: 1px solid #e4eaf0;
+      border-right: 1px solid #e4eaf0;
+      vertical-align: middle;
+    }
+    tbody tr td:last-child { border-right: none; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) td { background: #f5f8fb; }
+
+    .td-label { color: #4a5c6e; font-size: 8.5pt; }
+    .td-val   { font-weight: 700; color: #0d1a26; font-size: 9.5pt; }
+    .td-sum   { font-weight: 700; color: #1a5fa8; font-size: 9.5pt; }
+    .td-heat  { font-weight: 700; color: #c04000; font-size: 9.5pt; }
+    .td-cool  { font-weight: 700; color: #005fa8; font-size: 9.5pt; }
+    .td-formula { color: #7a8fa0; font-size: 7.5pt; font-style: italic; }
+
+    /* Total row */
+    .tr-total td {
+      background: #1e3a5c !important;
+      color: white !important;
+      font-weight: 700;
+      font-size: 9.5pt;
+      border-color: #1e3a5c !important;
+    }
+
+    /* ── EQUIPMENT SUMMARY TABLE ── */
+    .eq-table { width: 100%; border-collapse: collapse; }
+    .eq-table td {
+      padding: 7pt 9pt;
+      font-size: 9pt;
+      color: #0d1a26;
+      border-bottom: 1px solid #e4eaf0;
+      border-right: 1px solid #e4eaf0;
+      vertical-align: middle;
+    }
+    .eq-table td:last-child { border-right: none; }
+    .eq-table .eq-lbl {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6a7f96;
+      display: block;
+      margin-bottom: 2pt;
+    }
+    .eq-table .eq-val {
+      font-size: 13pt;
+      font-weight: 900;
+      color: #0d2137;
+      line-height: 1.1;
+    }
+    .eq-table .eq-sub {
+      font-size: 8pt;
+      color: #6a7f96;
+      margin-top: 2pt;
+    }
+    .eq-ok   { color: #1a7a38 !important; }
+    .eq-warn { color: #c04000 !important; }
+
+    /* ── GOVERNING LOAD BOX ── */
+    .gov-row {
+      display: flex; gap: 0;
+    }
+    .gov-cell {
+      flex: 1;
+      padding: 8pt 10pt;
+      border-right: 1px solid #d0d9e3;
+    }
+    .gov-cell:last-child { border-right: none; }
+    .gov-lbl { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6a7f96; margin-bottom: 2pt; }
+    .gov-val { font-size: 15pt; font-weight: 900; color: #0d2137; line-height: 1; }
+    .gov-sub { font-size: 7.5pt; color: #8a9fb5; margin-top: 3pt; }
+    .gov-val.heat { color: #c04000; }
+    .gov-val.cool { color: #005fa8; }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      margin-top: 14pt;
+      padding-top: 7pt;
+      border-top: 1.5px solid #d0d9e3;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #8a9fb5;
+    }
+    .disclaimer {
+      background: #fffce6;
+      border: 1px solid #e8c840;
+      border-radius: 3pt;
+      padding: 7pt 10pt;
+      font-size: 8pt;
+      color: #5a4a00;
+      margin-top: 10pt;
+    }
+
+    /* ── PAGE BREAKS ── */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm 14mm;
+      }
+      body { background: white; }
+      .page { width: 100%; padding: 0; }
+      .doc-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .section-hdr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      thead tr th  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .tr-total td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      /* Never break inside a section */
+      .section { page-break-inside: avoid; break-inside: avoid; }
+      /* Force a fresh page before equipment section */
+      .page-break-before { page-break-before: always; break-before: page; }
+      .doc-footer { page-break-inside: avoid; break-inside: avoid; }
+    }
+  `);
+  H.push('</style></head><body><div class="page">');
+
+  // ── HEADER ──
+  H.push(`
+    <div class="doc-header">
+      <div>
+        <div class="doc-title">Pool Heat Cool Unit Sizing</div>
+        <div class="doc-subtitle">Swimming Pool Heater &amp; Chiller Sizing</div>
+      </div>
+      <div class="doc-meta">
+        <div><strong>Project:</strong> ${projectName}</div>
+        <div><strong>Date:</strong> ${date}</div>
+        <div><strong>Location:</strong> ${location}</div>
+      </div>
+    </div>
+  `);
+
+  // ── 1. PROJECT INFORMATION ──
+  H.push(`
+    <div class="section">
+      <div class="section-hdr">1. Project Information</div>
+      <table>
+        <tbody>
+          <tr><td class="td-label" style="width:28%">Project Name</td><td class="td-val">${projectName}</td><td class="td-label" style="width:22%">Location</td><td class="td-val">${location}</td></tr>
+          <tr><td class="td-label">Main Contractor</td><td class="td-val">${mainContractor}</td><td class="td-label">Consultant</td><td class="td-val">${consultantName}</td></tr>
+          <tr><td class="td-label">Sub Contractor</td><td class="td-val" colspan="3">${subContractor}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // ── 2. POOL PARAMETERS ──
+  const poolSysType = typeof poolSystemType !== 'undefined' ? poolSystemType : 'overflow';
+  H.push(`
+    <div class="section">
+      <div class="section-hdr blue">2. Pool Parameters</div>
+      <table>
+        <thead><tr><th style="width:35%">Parameter</th><th>Value / Description</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <tbody>
+          <tr><td class="td-label">Pool System Type</td><td class="td-val" colspan="3">${poolSysType === 'overflow' ? '♾️ Overflow Pool' : '🌊 Skimmer Pool'}</td></tr>
+          <tr><td class="td-label">Pool Surface Area (A)</td><td class="td-sum" colspan="3">${n2(area)} m²</td></tr>
+          <tr><td class="td-label">Pool Volume (V)</td><td class="td-val" colspan="3">${n2(vol)} m³ &nbsp;(${(vol*1000).toFixed(0)} L)</td></tr>
+          ${totalVol > vol ? `<tr><td class="td-label">Total System Water Volume</td><td class="td-sum" colspan="3">${n2(totalVol)} m³ &nbsp;(${(totalVol*1000).toFixed(0)} L)</td></tr>` : ''}
+          <tr><td class="td-label">Initial Water Temp (T1)</td><td></td><td class="td-heat">${rS.T1||0} °C</td><td class="td-cool">${rW.T1||0} °C</td></tr>
+          <tr><td class="td-label">Desired Pool Temp (T2)</td><td></td><td class="td-heat">${rS.T2||0} °C</td><td class="td-cool">${rW.T2||0} °C</td></tr>
+          <tr><td class="td-label">Ambient Air Temp (T3)</td><td></td><td class="td-heat">${rS.T3||0} °C</td><td class="td-cool">${rW.T3||0} °C</td></tr>
+          <tr><td class="td-label">ΔT1 (T2 − T1)</td><td></td><td class="td-heat">${n2((rS.T2||0)-(rS.T1||0))} K</td><td class="td-cool">${n2((rW.T2||0)-(rW.T1||0))} K</td></tr>
+          <tr><td class="td-label">Heat-up Period (θ1)</td><td class="td-val" colspan="3">${document.getElementById('theta1').value || 48} hrs</td></tr>
+          <tr><td class="td-label">Daily Running Hours (θ2)</td><td class="td-val" colspan="3">${document.getElementById('theta2').value || 16} hrs/day</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // ── 3. HEATING CAPACITY ──
+  H.push(`
+    <div class="section">
+      <div class="section-hdr" style="background:#8b2500">3. Heating Capacity</div>
+      <table>
+        <thead><tr><th style="width:35%">Parameter</th><th>Formula</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <tbody>
+          <tr><td class="td-label">Initial Heating (q1)</td><td class="td-formula">V × ΔT1 × 1163 / θ1 × w</td><td class="td-heat">${n2(rS.q1h)} kW</td><td class="td-cool">${n2(rW.q1h)} kW</td></tr>
+          <tr><td class="td-label">Daily Heat Loss (q2)</td><td class="td-formula">A × ΔT2 × 20 / θ2 × w</td><td class="td-heat">${n2(rS.q2h)} kW</td><td class="td-cool">${n2(rW.q2h)} kW</td></tr>
+          <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL HEATING LOAD</td><td>${n2(rS.qhTotal)} kW</td><td>${n2(rW.qhTotal)} kW</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // ── 4. COOLING CAPACITY ──
+  H.push(`
+    <div class="section">
+      <div class="section-hdr" style="background:#004e8c">4. Cooling Capacity</div>
+      <table>
+        <thead><tr><th style="width:35%">Parameter</th><th>Formula</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <tbody>
+          <tr><td class="td-label">Initial Cooling (q1)</td><td class="td-formula">V × ΔTc × 1163 / θ1 × w</td><td class="td-cool">${n2(rS.q1c)} kW</td><td class="td-cool">${n2(rW.q1c)} kW</td></tr>
+          <tr><td class="td-label">Solar Heat Gain (Q☀)</td><td class="td-formula">A × Irr × Hrs / θ</td><td class="td-heat">${n2(rS.qsolar)} kW</td><td class="td-heat">${n2(rW.qsolar)} kW</td></tr>
+          <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL COOLING LOAD</td><td>${n2(rS.qcTotal)} kW</td><td>${n2(rW.qcTotal)} kW</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // ── PAGE BREAK before Equipment ──
+  H.push('<div class="page-break-before"></div>');
+
+  // ── 5. GOVERNING DESIGN LOADS ──
+  const govHeatSeason = rS.qhTotal >= rW.qhTotal ? 'Summer' : 'Winter';
+  const govCoolSeason = rS.qcTotal >= rW.qcTotal ? 'Summer' : 'Winter';
+  H.push(`
+    <div class="section">
+      <div class="section-hdr green">5. Governing Design Loads (Max of Summer / Winter)</div>
+      <div class="gov-row">
+        <div class="gov-cell">
+          <div class="gov-lbl">🔥 Design Heating Load</div>
+          <div class="gov-val heat">${n2(reqHeat)} kW</div>
+          <div class="gov-sub">Governing season: ${govHeatSeason}</div>
+        </div>
+        <div class="gov-cell">
+          <div class="gov-lbl">❄ Design Cooling Load</div>
+          <div class="gov-val cool">${n2(reqCool)} kW</div>
+          <div class="gov-sub">Governing season: ${govCoolSeason}</div>
+        </div>
+        <div class="gov-cell">
+          <div class="gov-lbl">Heat-up Period (θ1)</div>
+          <div class="gov-val" style="font-size:13pt">${document.getElementById('theta1').value || 48} hrs</div>
+          <div class="gov-sub">Initial heat-up time</div>
+        </div>
+        <div class="gov-cell">
+          <div class="gov-lbl">Wind Factor (w)</div>
+          <div class="gov-val" style="font-size:13pt">${(windData[selWind]||{h:1}).h.toFixed(2)}</div>
+          <div class="gov-sub">At ${selWind} km/h</div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // ── 6. EQUIPMENT SELECTED ──
+  const heatOk = instHeat >= reqHeat;
+  const coolOk = instCool >= reqCool;
+  H.push(`
+    <div class="section">
+      <div class="section-hdr" style="background:#163352">6. Equipment Selected</div>
+      <table class="eq-table">
+        <tbody>
+          <tr>
+            <td style="width:34%;background:#f0f4f8;border-bottom:1px solid #d8e2ea">
+              <span class="eq-lbl">Heater Brand &amp; Model</span>
+              <span class="eq-val" style="font-size:11pt">${hBrand}</span>
+              <div class="eq-sub">${hModel}</div>
+            </td>
+            <td style="width:22%;background:#f0f4f8;border-bottom:1px solid #d8e2ea">
+              <span class="eq-lbl">No. of Units</span>
+              <span class="eq-val">${hQty}</span>
+              <div class="eq-sub">Heat pump unit${hQty > 1 ? 's' : ''}</div>
+            </td>
+            <td style="width:22%;background:#f0f4f8;border-bottom:1px solid #d8e2ea">
+              <span class="eq-lbl">Heating Capacity / Unit</span>
+              <span class="eq-val" style="color:#c04000">${hKW.toFixed(1)} kW</span>
+              <div class="eq-sub">Per unit</div>
+            </td>
+            <td style="background:#f0f4f8;border-bottom:1px solid #d8e2ea">
+              <span class="eq-lbl">Cooling Capacity / Unit</span>
+              <span class="eq-val" style="color:#005fa8">${cKW.toFixed(1)} kW</span>
+              <div class="eq-sub">Per unit</div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <span class="eq-lbl">Total Installed Heating</span>
+              <span class="eq-val ${heatOk ? 'eq-ok' : 'eq-warn'}">${instHeat.toFixed(1)} kW</span>
+              <div class="eq-sub">${hQty} × ${hKW.toFixed(1)} kW</div>
+            </td>
+            <td colspan="2">
+              <span class="eq-lbl">Required Heating (Design)</span>
+              <span class="eq-val">${n2(reqHeat)} kW</span>
+              <div class="eq-sub ${heatOk ? 'eq-ok' : 'eq-warn'}">${heatOk ? '✔ Adequate' : '⚠ Undersized'}</div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <span class="eq-lbl">Total Installed Cooling</span>
+              <span class="eq-val ${coolOk ? 'eq-ok' : 'eq-warn'}">${instCool.toFixed(1)} kW</span>
+              <div class="eq-sub">${hQty} × ${cKW.toFixed(1)} kW</div>
+            </td>
+            <td colspan="2">
+              <span class="eq-lbl">Required Cooling (Design)</span>
+              <span class="eq-val">${n2(reqCool)} kW</span>
+              <div class="eq-sub ${coolOk ? 'eq-ok' : 'eq-warn'}">${coolOk ? '✔ Adequate' : '⚠ Undersized'}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="padding:7pt 10pt;font-size:8pt;color:#4a5c6e;background:#f8fafc;border-top:1px solid #e4eaf0">
+        ℹ Reversible heat pump — same unit operates in both heating and cooling modes.
+      </div>
+    </div>
+  `);
+
+  // ── DISCLAIMER ──
+  H.push(`
+    <div class="disclaimer">
+      ⚠ <strong>Disclaimer:</strong> Results are indicative only. Always verify against manufacturer data sheets, site conditions, and applicable engineering codes. A qualified engineer should confirm final equipment selection.
+    </div>
+  `);
+
+  // ── FOOTER ──
+  H.push(`
+    <div class="doc-footer">
+      <span>AquaCalc — Pool Heat Cool Unit Sizing</span>
+      <span>Project: ${projectName} &nbsp;|&nbsp; ${date}</span>
+    </div>
+  `);
+
+  H.push('</div></body></html>');
+
+  const win = window.open('', '_blank', 'width=960,height=750,scrollbars=yes');
+  win.document.write(H.join('\n'));
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 900);
+}
+
+// ── INIT ──
+updatePoolCalc();
+calcDeltas();
+updateWindFactors();
+updateSolarCalc();
+
+// Set today's date
+(function() {
+  const d  = new Date();
+  const el = document.getElementById('projectDate');
+  if (el) el.value = d.toISOString().split('T')[0];
+})();
+</script>
+</body>
+</html>
