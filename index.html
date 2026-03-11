@@ -1058,6 +1058,41 @@ body {
 .vb-chip.vb-total .vc-sub { color: rgba(255,255,255,0.4); }
 
 /* ═══════════════════════════
+   POOL SYSTEM TYPE BUTTONS
+   ═══════════════════════════ */
+.pool-sys-btn {
+  background: var(--fill3);
+  border: 1.5px solid var(--sep);
+  border-radius: var(--radius-card);
+  padding: 14px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  font-family: inherit;
+  width: 100%;
+}
+.pool-sys-btn:hover {
+  border-color: var(--ios-blue);
+  background: var(--fill2);
+}
+.pool-sys-btn.active {
+  background: linear-gradient(135deg, #0D2137, #163352);
+  border-color: var(--ios-blue);
+  box-shadow: 0 2px 12px rgba(0,122,255,0.25);
+}
+.psb-icon { font-size: 22px; margin-bottom: 5px; }
+.psb-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--label);
+  letter-spacing: -0.2px;
+}
+.pool-sys-btn.active .psb-name { color: white; }
+.psb-desc {
+  font-size: 11px; color: var(--label3); margin-top: 2px;
+}
+.pool-sys-btn.active .psb-desc { color: rgba(255,255,255,0.5); }
+
+/* ═══════════════════════════
    MODE TOGGLE (Brand vs Manual)
    ═══════════════════════════ */
 .mode-toggle {
@@ -1249,13 +1284,13 @@ body {
   </div>
   <!-- Section quick-nav tabs -->
   <div class="section-tabs" id="sectionTabs">
-    <button class="stab-pill active" onclick="scrollToSection('secProject')">Project</button>
-    <button class="stab-pill" onclick="scrollToSection('secDimensions')">Dimensions</button>
+    <button class="stab-pill active" onclick="scrollToSection('secDimensions')">Dimensions</button>
     <button class="stab-pill" onclick="scrollToSection('secTemps')">Temperatures</button>
     <button class="stab-pill" onclick="scrollToSection('secWind')">Wind</button>
     <button class="stab-pill" onclick="scrollToSection('secSolar')">Solar</button>
     <button class="stab-pill" onclick="scrollToSection('secResults')">Results</button>
     <button class="stab-pill" onclick="scrollToSection('secUnits')">Unit Selection</button>
+    <button class="stab-pill" onclick="scrollToSection('secProject')">📋 Project</button>
   </div>
 </nav>
 
@@ -1265,40 +1300,6 @@ body {
 <div class="main">
 
   <!-- ── PROJECT INFO ── -->
-  <div id="secProject">
-    <div class="section-header">
-      <div class="section-icon icon-blue">📋</div>
-      <h2>Project Details</h2>
-    </div>
-
-    <div class="project-card">
-      <label>Project Name</label>
-      <input type="text" class="ios-input full" id="projectName" placeholder="Enter project name…">
-      <div class="project-grid">
-        <div>
-          <label>Main Contractor</label>
-          <input type="text" class="ios-input full small" id="mainContractor" placeholder="Contractor name">
-        </div>
-        <div>
-          <label>Consultant</label>
-          <input type="text" class="ios-input full small" id="consultantName" placeholder="Consultant name">
-        </div>
-        <div>
-          <label>Sub Contractor</label>
-          <input type="text" class="ios-input full small" id="subContractor" placeholder="Sub contractor">
-        </div>
-        <div>
-          <label>Location</label>
-          <input type="text" class="ios-input full small" id="projectLocation" placeholder="e.g. Dubai, UAE">
-        </div>
-      </div>
-      <div style="margin-top:12px">
-        <label>Report Date</label>
-        <input type="date" id="projectDate" class="ios-input" style="width:auto;text-align:left;color-scheme:dark;color:white;background:rgba(255,255,255,0.1);border-color:transparent;">
-      </div>
-    </div>
-  </div>
-
   <!-- ── POOL DIMENSIONS ── -->
   <div id="secDimensions">
     <div class="section-header">
@@ -1322,7 +1323,7 @@ body {
           <button class="pool-sys-btn" id="psBtn_skimmer" onclick="selectPoolSystem('skimmer')">
             <div class="psb-icon">🌊</div>
             <div class="psb-name">Skimmer Pool</div>
-            <div class="psb-desc">With optional balance tank</div>
+            <div class="psb-desc"></div>
           </button>
         </div>
       </div>
@@ -1407,15 +1408,8 @@ body {
 
       <!-- Skimmer extra volumes — same fields but optional -->
       <div id="evSkimmer" style="display:none;padding:10px 16px 14px;border-top:0.5px solid var(--sep);background:var(--fill3)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3);margin-bottom:10px">⊕ Additional Water Volumes — Skimmer System <span style="color:var(--ios-blue);font-weight:600;text-transform:none;letter-spacing:0;font-size:11px">(Optional)</span></div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--label3);margin-bottom:10px">⊕ Additional Water Volume — Skimmer System <span style="color:var(--ios-blue);font-weight:600;text-transform:none;letter-spacing:0;font-size:11px">(Optional)</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Balancing Tank Volume</label>
-            <div style="display:flex;align-items:center;gap:6px">
-              <input type="number" class="ios-input" id="evBalance" value="0" min="0" step="0.1" oninput="updatePoolCalc()" style="width:90px">
-              <span class="unit-label">m³</span>
-            </div>
-          </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Additional Water Volume</label>
             <div style="display:flex;align-items:center;gap:6px">
@@ -1423,8 +1417,10 @@ body {
               <span class="unit-label">m³</span>
             </div>
           </div>
+          <!-- hidden balance field kept for JS compatibility -->
+          <input type="hidden" id="evBalance" value="0">
         </div>
-        <div style="font-size:12px;color:var(--label3);margin-top:8px">💡 Optional — leave as 0 if not applicable. Entered volumes are added to pool volume for total system water volume</div>
+        <div style="font-size:12px;color:var(--label3);margin-top:8px">💡 Optional — added to pool volume for total system water volume</div>
       </div>
     </div>
 
@@ -1512,8 +1508,8 @@ body {
             <tr>
               <td>Initial Water Temp</td>
               <td><strong>T1</strong></td>
-              <td><input type="number" class="ios-input" id="T1s" value="28" min="0" max="45" oninput="calcDeltas()"></td>
-              <td><input type="number" class="ios-input" id="T1w" value="18" min="0" max="45" oninput="calcDeltas()"></td>
+              <td><input type="number" class="ios-input" id="T1s" value="35" min="0" max="45" oninput="calcDeltas()"></td>
+              <td><input type="number" class="ios-input" id="T1w" value="15" min="0" max="45" oninput="calcDeltas()"></td>
               <td>°C</td>
             </tr>
             <tr>
@@ -1587,8 +1583,8 @@ body {
         <div class="row-control">
           <select class="ios-select" id="windSpeed" onchange="updateWindFactors()">
             <option value="5">Less than 5 km/h</option>
-            <option value="10" selected>5–8 km/h (Light)</option>
-            <option value="16">8–16 km/h (Moderate)</option>
+            <option value="10">5–8 km/h (Light)</option>
+            <option value="16" selected>8–16 km/h (Moderate)</option>
             <option value="20">≥ 16 km/h (Strong)</option>
           </select>
         </div>
@@ -1605,8 +1601,8 @@ body {
           </thead>
           <tbody>
             <tr id="wrow_5" onclick="selectWind(5)"><td>&lt; 5</td><td>1.0</td><td>1.0</td><td>1.0</td></tr>
-            <tr id="wrow_10" class="selected-wind" onclick="selectWind(10)"><td>5 – 8</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
-            <tr id="wrow_16" onclick="selectWind(16)"><td>8 – 16</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
+            <tr id="wrow_10" onclick="selectWind(10)"><td>5 – 8</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
+            <tr id="wrow_16" class="selected-wind" onclick="selectWind(16)"><td>8 – 16</td><td>1.25</td><td>1.25</td><td>1.25</td></tr>
             <tr id="wrow_20" onclick="selectWind(20)"><td>≥ 16</td><td>2.0</td><td>2.0</td><td>2.0</td></tr>
           </tbody>
         </table>
@@ -1628,8 +1624,9 @@ body {
       <div class="card-row">
         <span class="row-label">Pool Enclosure</span>
         <div class="row-control">
-          <select class="ios-select" id="enclosure">
-            <option value="1.0">Outdoor — No Cover</option>
+          <select class="ios-select" id="enclosure" onchange="applyEnclosureDefaults()">
+            <option value="1.2">Outdoor — Windy / Exposed</option>
+            <option value="1.0" selected>Outdoor — No Cover</option>
             <option value="0.75">Outdoor — Pool Cover</option>
             <option value="0.5">Semi-enclosed</option>
             <option value="0.35">Fully Indoor</option>
@@ -1639,10 +1636,16 @@ body {
       <div class="card-row">
         <span class="row-label">Pool Location</span>
         <div class="row-control">
-          <select class="ios-select" id="poolLocation">
+          <select class="ios-select" id="poolLocation" onchange="applyEnclosureDefaults()">
             <option value="outdoor">Outdoor</option>
             <option value="indoor">Indoor</option>
           </select>
+        </div>
+      </div>
+      <!-- Auto-set hint -->
+      <div id="enclosureHint" style="padding:8px 16px 12px;font-size:12px;color:var(--ios-blue);display:none">
+        💡 <span id="enclosureHintText"></span>
+      </div>
         </div>
       </div>
     </div>
@@ -1764,6 +1767,10 @@ body {
               <span class="scol-lbl">Solar Gain (Q☀)</span>
               <span class="scol-val" style="color:var(--ios-blue)" id="s_qsolar">—</span>
             </div>
+            <div class="scol-row" id="s_solarAssump" style="background:rgba(255,214,10,0.06);border-radius:6px;padding:6px 8px;margin:2px 0">
+              <span class="scol-lbl" style="font-size:11px;color:var(--label3)">☀ Irr: <span id="s_solarIrrShow">—</span> W/m² × <span id="s_solarHrsShow">—</span> hrs/day × Area</span>
+              <span class="scol-val" style="font-size:11px;color:var(--label3)" id="s_solarKWhShow">— kWh/d</span>
+            </div>
             <div class="scol-row total-row">
               <span class="scol-lbl">Total Cooling Load</span>
               <span class="scol-val" style="color:var(--ios-blue)" id="s_qcTotal">—</span>
@@ -1812,6 +1819,10 @@ body {
             <div class="scol-row">
               <span class="scol-lbl">Solar Gain (Q☀)</span>
               <span class="scol-val" style="color:var(--ios-green)" id="w_qsolar">—</span>
+            </div>
+            <div class="scol-row" id="w_solarAssump" style="background:rgba(255,214,10,0.06);border-radius:6px;padding:6px 8px;margin:2px 0">
+              <span class="scol-lbl" style="font-size:11px;color:var(--label3)">☀ Irr: <span id="w_solarIrrShow">—</span> W/m² × <span id="w_solarHrsShow">—</span> hrs/day × Area</span>
+              <span class="scol-val" style="font-size:11px;color:var(--label3)" id="w_solarKWhShow">— kWh/d</span>
             </div>
             <div class="scol-row total-row">
               <span class="scol-lbl">Total Cooling Load</span>
@@ -1944,6 +1955,47 @@ body {
       </div>
     </div>
 
+    <!-- ── PROJECT DETAILS (Optional — appears after kW results) ── -->
+    <div id="secProject" style="display:none">
+      <div class="section-header" style="cursor:pointer" onclick="toggleProjectDetails()">
+        <div class="section-icon icon-blue">📋</div>
+        <h2>Project Details <span style="font-size:12px;font-weight:500;color:var(--label3);margin-left:6px">— Optional</span></h2>
+        <div id="projToggleIcon" style="margin-left:auto;font-size:18px;color:var(--label3);transition:transform 0.25s">▼</div>
+      </div>
+
+      <div id="projDetailsBody">
+        <div style="padding:10px 16px;font-size:12px;color:var(--label3);background:var(--fill3);border-radius:8px;margin-bottom:8px">
+          💡 Fill in project details to include them in the PDF report. All fields are optional.
+        </div>
+        <div class="project-card">
+          <label>Project Name</label>
+          <input type="text" class="ios-input full" id="projectName" placeholder="Enter project name…">
+          <div class="project-grid">
+            <div>
+              <label>Main Contractor</label>
+              <input type="text" class="ios-input full small" id="mainContractor" placeholder="Contractor name">
+            </div>
+            <div>
+              <label>Consultant</label>
+              <input type="text" class="ios-input full small" id="consultantName" placeholder="Consultant name">
+            </div>
+            <div>
+              <label>Sub Contractor</label>
+              <input type="text" class="ios-input full small" id="subContractor" placeholder="Sub contractor">
+            </div>
+            <div>
+              <label>Location</label>
+              <input type="text" class="ios-input full small" id="projectLocation" placeholder="e.g. Dubai, UAE">
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <label>Report Date</label>
+            <input type="date" id="projectDate" class="ios-input" style="width:auto;text-align:left;color-scheme:dark;color:white;background:rgba(255,255,255,0.1);border-color:transparent;">
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /results-section -->
 
 </div><!-- /main -->
@@ -1957,7 +2009,7 @@ body {
   <div class="footer-grid">
     <div class="footer-section">
       <h4>Quick Links</h4>
-      <a href="#secProject">📋 Project Details</a>
+      <a href="#secProject">📋 Project Details (Optional)</a>
       <a href="#secDimensions">📐 Pool Dimensions</a>
       <a href="#secTemps">🌡️ Temperature Settings</a>
       <a href="#secResults">⚡ Results</a>
@@ -1995,16 +2047,24 @@ const windData = {
   16: { h: 1.25, c: 1.25, e: 1.25 },
   20: { h: 2.0,  c: 2.0,  e: 2.0  }
 };
-let selWind = 10;
+let selWind = 16;
 
 // ── SECTION SCROLL ──
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.querySelectorAll('.stab-pill').forEach(b => b.classList.remove('active'));
-  const idx = ['secProject','secDimensions','secTemps','secWind','secSolar','secResults','secUnits'].indexOf(id);
+  const idx = ['secDimensions','secTemps','secWind','secSolar','secResults','secUnits','secProject'].indexOf(id);
   const tabs = document.querySelectorAll('.stab-pill');
   if (tabs[idx]) tabs[idx].classList.add('active');
+}
+
+function toggleProjectDetails() {
+  const body = document.getElementById('projDetailsBody');
+  const icon = document.getElementById('projToggleIcon');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  icon.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
 }
 
 // ── POOL SYSTEM TYPE ──
@@ -2200,6 +2260,76 @@ function updateWindFactors() {
   document.getElementById('wEvapDisp').textContent = w.e.toFixed(2);
 }
 
+// ── ENCLOSURE / LOCATION AUTO-DEFAULTS ──
+// UAE climate defaults per enclosure type:
+//   Outdoor No Cover   → Wind: Strong (≥16 km/h), Solar ON,  Irr: 866.56 W/m², Hrs: 6.4
+//   Outdoor Pool Cover → Wind: Moderate (8-16),   Solar ON,  Irr: 600 W/m²,    Hrs: 5.0
+//   Semi-enclosed      → Wind: Light (5-8),        Solar ON,  Irr: 500 W/m²,    Hrs: 4.0
+//   Fully Indoor       → Wind: < 5 km/h,           Solar OFF, Irr: 0,            Hrs: 0
+function applyEnclosureDefaults() {
+  const enc  = document.getElementById('enclosure').value;
+  const loc  = document.getElementById('poolLocation').value;
+  const windEl   = document.getElementById('windSpeed');
+  const solarChk = document.getElementById('solarCheck');
+  const irrEl    = document.getElementById('solarIrr');
+  const hrsEl    = document.getElementById('solarHrs');
+  const hint     = document.getElementById('enclosureHint');
+  const hintTxt  = document.getElementById('enclosureHintText');
+
+  let windVal, solarOn, irr, hrs, msg;
+
+  if (loc === 'indoor' || enc === '0.35') {
+    // Fully Indoor
+    windVal = 5;   solarOn = false; irr = 0;      hrs = 0;
+    msg = 'Indoor pool: Wind set to < 5 km/h, Solar Heat Gain disabled';
+  } else if (enc === '1.2') {
+    // Outdoor Windy / Exposed — Strong wind, factor 2.0
+    windVal = 20;  solarOn = true;  irr = 866.56; hrs = 6.4;
+    msg = 'Outdoor (windy/exposed): Wind ≥ 16 km/h (w = 2.0), Solar Irr 866.56 W/m², 6.4 hrs/day';
+  } else if (enc === '1.0') {
+    // Outdoor No Cover — Moderate wind
+    windVal = 16;  solarOn = true;  irr = 866.56; hrs = 6.4;
+    msg = 'Outdoor (no cover): Wind 8–16 km/h (w = 1.25), Solar Irr 866.56 W/m², 6.4 hrs/day';
+  } else if (enc === '0.75') {
+    // Outdoor with Pool Cover
+    windVal = 10;  solarOn = true;  irr = 600;    hrs = 5.0;
+    msg = 'Outdoor (covered): Wind 5–8 km/h (w = 1.25), Solar Irr 600 W/m², 5.0 hrs/day';
+  } else if (enc === '0.5') {
+    // Semi-enclosed
+    windVal = 5;   solarOn = true;  irr = 500;    hrs = 4.0;
+    msg = 'Semi-enclosed: Wind < 5 km/h (w = 1.0), Solar Irr 500 W/m², 4.0 hrs/day';
+  }
+
+  // Apply wind
+  windEl.value = windVal;
+  selWind = windVal;
+  document.querySelectorAll('.wind-table tbody tr').forEach(r => r.classList.remove('selected-wind'));
+  const rowEl = document.getElementById('wrow_' + windVal);
+  if (rowEl) rowEl.classList.add('selected-wind');
+  const w = windData[windVal];
+  document.getElementById('wHeatDisp').textContent = w.h.toFixed(2);
+  document.getElementById('wCoolDisp').textContent = w.c.toFixed(2);
+  document.getElementById('wEvapDisp').textContent = w.e.toFixed(2);
+
+  // Apply solar
+  solarChk.checked = solarOn;
+  const solarInputs = document.getElementById('solarInputs');
+  solarInputs.style.opacity = solarOn ? 1 : 0.4;
+  solarInputs.style.pointerEvents = solarOn ? '' : 'none';
+  if (solarOn) {
+    irrEl.value = irr;
+    hrsEl.value = hrs;
+    updateSolarCalc();
+  }
+
+  // Show hint
+  hint.style.display = 'block';
+  hintTxt.textContent = msg + ' — you can still adjust manually below.';
+
+  // Recalculate
+  updatePoolCalc();
+}
+
 // ── SOLAR ──
 function toggleSolar() {
   const cb = document.getElementById('solarCheck');
@@ -2302,11 +2432,16 @@ function runCalculation() {
   results.volM3   = poolVolM3;   // pool only
   results.totalVolM3 = volM3;   // total system
   results.volL    = volL;
-  results.solarKW = solarKW;
-  results.solarKWh = solarKWh;
+  results.solarKW   = solarKW;
+  results.solarKWh  = solarKWh;
+  results.solarIrr  = solarOn ? irr : 0;
+  results.solarHrs  = solarOn ? solarHrs : 0;
+  results.solarOn   = solarOn;
 
   renderResults();
   document.getElementById('resultsSection').classList.add('show');
+  // Also ensure project details section is visible
+  document.getElementById('secProject').style.display = 'block';
   setTimeout(() => document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   if (selectedBrand) renderMatchedModels();
 }
@@ -2333,6 +2468,16 @@ function renderResults() {
   document.getElementById('s_qcTotal').textContent   = fmt(rS.qcTotal);
   document.getElementById('s_coolRequired').textContent = rS.qcTotal.toFixed(2);
 
+  // Solar assumptions row — summer
+  const sIrr = results.solarIrr || 0;
+  const sHrs = results.solarHrs || 0;
+  const sKWh = results.solarKWh || 0;
+  const sOn  = results.solarOn;
+  document.getElementById('s_solarIrrShow').textContent  = sOn ? sIrr.toFixed(1) : '—';
+  document.getElementById('s_solarHrsShow').textContent  = sOn ? sHrs.toFixed(1) : '—';
+  document.getElementById('s_solarKWhShow').textContent  = sOn ? sKWh.toFixed(2) + ' kWh/d' : 'Not included';
+  document.getElementById('s_solarAssump').style.display = sOn ? '' : 'none';
+
   // Winter column
   document.getElementById('w_q1h').textContent       = fmt(rW.q1h);
   document.getElementById('w_q2h').textContent       = fmt(rW.q2h);
@@ -2342,6 +2487,12 @@ function renderResults() {
   document.getElementById('w_qsolar').textContent    = fmt(rW.qsolar);
   document.getElementById('w_qcTotal').textContent   = fmt(rW.qcTotal);
   document.getElementById('w_coolRequired').textContent = rW.qcTotal.toFixed(2);
+
+  // Solar assumptions row — winter
+  document.getElementById('w_solarIrrShow').textContent  = sOn ? sIrr.toFixed(1) : '—';
+  document.getElementById('w_solarHrsShow').textContent  = sOn ? sHrs.toFixed(1) : '—';
+  document.getElementById('w_solarKWhShow').textContent  = sOn ? (results.area * sIrr / 1000 * sHrs).toFixed(2) + ' kWh/d' : 'Not included';
+  document.getElementById('w_solarAssump').style.display = sOn ? '' : 'none';
 
   // Governing design loads
   const govHeat = Math.max(rS.qhTotal, rW.qhTotal);
@@ -3151,10 +3302,21 @@ function generatePDF() {
     <div class="section">
       <div class="section-hdr" style="background:#004e8c">4. Cooling Capacity</div>
       <table>
-        <thead><tr><th style="width:35%">Parameter</th><th>Formula</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <thead><tr><th style="width:35%">Parameter</th><th>Formula / Assumption</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
         <tbody>
           <tr><td class="td-label">Initial Cooling (q1)</td><td class="td-formula">V × ΔTc × 1163 / θ1 × w</td><td class="td-cool">${n2(rS.q1c)} kW</td><td class="td-cool">${n2(rW.q1c)} kW</td></tr>
           <tr><td class="td-label">Solar Heat Gain (Q☀)</td><td class="td-formula">A × Irr × Hrs / θ</td><td class="td-heat">${n2(rS.qsolar)} kW</td><td class="td-heat">${n2(rW.qsolar)} kW</td></tr>
+          ${results.solarOn ? `
+          <tr style="background:#fffce6">
+            <td class="td-label" style="color:#7a5c00;font-size:8pt">☀ Solar Assumptions</td>
+            <td colspan="3" style="font-size:8pt;color:#7a5c00">
+              Irradiance: <strong>${(results.solarIrr||0).toFixed(1)} W/m²</strong> &nbsp;|&nbsp;
+              Exposure: <strong>${(results.solarHrs||0).toFixed(1)} hrs/day</strong> &nbsp;|&nbsp;
+              Pool Area: <strong>${n2(results.area)} m²</strong> &nbsp;|&nbsp;
+              Daily Solar Energy: <strong>${(results.solarKWh||0).toFixed(2)} kWh/day</strong> &nbsp;→&nbsp;
+              Continuous Load: <strong>${(results.solarKW||0).toFixed(2)} kW</strong>
+            </td>
+          </tr>` : ''}
           <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL COOLING LOAD</td><td>${n2(rS.qcTotal)} kW</td><td>${n2(rW.qcTotal)} kW</td></tr>
         </tbody>
       </table>
