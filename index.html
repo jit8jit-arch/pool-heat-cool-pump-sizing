@@ -3288,14 +3288,32 @@ function generatePDF() {
   `);
 
   // ── 3. HEATING CAPACITY ──
+  const wFactor  = (windData[selWind]||{h:1.25}).h;
+  const encFactor = parseFloat(document.getElementById('enclosure').value) || 1.0;
   H.push(`
     <div class="section">
       <div class="section-hdr" style="background:#8b2500">3. Heating Capacity</div>
       <table>
-        <thead><tr><th style="width:35%">Parameter</th><th>Formula</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <thead><tr><th style="width:32%">Parameter</th><th>Formula with Values</th><th style="width:16%">Summer</th><th style="width:16%">Winter</th></tr></thead>
         <tbody>
-          <tr><td class="td-label">Initial Heating (q1)</td><td class="td-formula">V × ΔT1 × 1163 / θ1 × w</td><td class="td-heat">${n2(rS.q1h)} kW</td><td class="td-cool">${n2(rW.q1h)} kW</td></tr>
-          <tr><td class="td-label">Daily Heat Loss (q2)</td><td class="td-formula">A × ΔT2 × 20 / θ2 × w</td><td class="td-heat">${n2(rS.q2h)} kW</td><td class="td-cool">${n2(rW.q2h)} kW</td></tr>
+          <tr>
+            <td class="td-label">Initial Heating (q1)<br><span style="font-size:7pt;color:#8a9fb5">V × ΔT1 × 1163 / θ1 × w × enc</span></td>
+            <td class="td-formula">
+              <b>Summer:</b> ${n2(results.totalVolM3)}m³ × ${((rS.T2||0)-(rS.T1||0)).toFixed(1)}K × 1163 / ${rS.theta1}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}<br>
+              <b>Winter:</b> ${n2(results.totalVolM3)}m³ × ${((rW.T2||0)-(rW.T1||0)).toFixed(1)}K × 1163 / ${rW.theta1}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}
+            </td>
+            <td class="td-heat">${n2(rS.q1h)} kW</td>
+            <td class="td-cool">${n2(rW.q1h)} kW</td>
+          </tr>
+          <tr>
+            <td class="td-label">Daily Heat Loss (q2)<br><span style="font-size:7pt;color:#8a9fb5">A × ΔT2 × 20 / θ2 × w × enc</span></td>
+            <td class="td-formula">
+              <b>Summer:</b> ${n2(results.area)}m² × ${Math.max((rS.T2||0)-(rS.T3||0),0).toFixed(1)}K × 20 / ${rS.theta2}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}<br>
+              <b>Winter:</b> ${n2(results.area)}m² × ${Math.max((rW.T2||0)-(rW.T3||0),0).toFixed(1)}K × 20 / ${rW.theta2}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}
+            </td>
+            <td class="td-heat">${n2(rS.q2h)} kW</td>
+            <td class="td-cool">${n2(rW.q2h)} kW</td>
+          </tr>
           <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL HEATING LOAD</td><td>${n2(rS.qhTotal)} kW</td><td>${n2(rW.qhTotal)} kW</td></tr>
         </tbody>
       </table>
@@ -3303,26 +3321,39 @@ function generatePDF() {
   `);
 
   // ── 4. COOLING CAPACITY ──
+  const solarIrrVal  = (results.solarIrr||0).toFixed(1);
+  const solarHrsVal  = (results.solarHrs||0).toFixed(1);
+  const solarKWhVal  = (results.solarKWh||0).toFixed(2);
+  const solarKWVal   = (results.solarKW||0).toFixed(2);
+  const theta2Val    = rS.theta2;
   H.push(`
     <div class="section">
       <div class="section-hdr" style="background:#004e8c">4. Cooling Capacity</div>
       <table>
-        <thead><tr><th style="width:35%">Parameter</th><th>Formula / Assumption</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
+        <thead><tr><th style="width:32%">Parameter</th><th>Formula with Values</th><th style="width:16%">Summer</th><th style="width:16%">Winter</th></tr></thead>
         <tbody>
-          <tr><td class="td-label">Initial Cooling (q1)</td><td class="td-formula">V × ΔTc × 1163 / θ1 × w</td><td class="td-cool">${n2(rS.q1c)} kW</td><td class="td-cool">${n2(rW.q1c)} kW</td></tr>
-          <tr><td class="td-label">Solar Heat Gain (Q☀)</td><td class="td-formula">(A × Irr × Hrs) ÷ θ2</td><td class="td-heat">${n2(rS.qsolar)} kW</td><td class="td-heat">${n2(rW.qsolar)} kW</td></tr>
-          ${results.solarOn ? `
-          <tr style="background:#fffce6">
-            <td class="td-label" style="color:#7a5c00;font-size:8pt">☀ Solar Assumptions</td>
-            <td colspan="3" style="font-size:8pt;color:#7a5c00">
-              Irradiance: <strong>${(results.solarIrr||0).toFixed(1)} W/m²</strong> &nbsp;|&nbsp;
-              Exposure: <strong>${(results.solarHrs||0).toFixed(1)} hrs/day</strong> &nbsp;|&nbsp;
-              Pool Area: <strong>${n2(results.area)} m²</strong> &nbsp;|&nbsp;
-              Daily Solar Energy: <strong>${(results.solarKWh||0).toFixed(2)} kWh/day</strong> &nbsp;÷&nbsp;
-              Chiller Operating Hours: <strong>${rS.theta2} hrs/day</strong> &nbsp;=&nbsp;
-              Avg. Cooling Load: <strong>${(results.solarKW||0).toFixed(2)} kW</strong>
+          <tr>
+            <td class="td-label">Initial Cooling (q1)<br><span style="font-size:7pt;color:#8a9fb5">V × ΔTc × 1163 / θ1 × w × enc</span></td>
+            <td class="td-formula">
+              <b>Summer:</b> ${n2(results.totalVolM3)}m³ × ${Math.max((rS.T1||0)-(rS.T2||0),0).toFixed(1)}K × 1163 / ${rS.theta1}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}<br>
+              <b>Winter:</b> ${n2(results.totalVolM3)}m³ × ${Math.max((rW.T1||0)-(rW.T2||0),0).toFixed(1)}K × 1163 / ${rW.theta1}h × ${wFactor.toFixed(2)} × ${encFactor.toFixed(2)}
             </td>
-          </tr>` : ''}
+            <td class="td-cool">${n2(rS.q1c)} kW</td>
+            <td class="td-cool">${n2(rW.q1c)} kW</td>
+          </tr>
+          <tr>
+            <td class="td-label">Solar Heat Gain (Q☀)<br><span style="font-size:7pt;color:#8a9fb5">(A × Irr × Hrs) ÷ θ2</span></td>
+            <td class="td-formula">
+              ${results.solarOn
+                ? `(${n2(results.area)} m² × ${solarIrrVal} W/m² × ${solarHrsVal} hrs/day) ÷ ${theta2Val} operating hrs/day<br>
+                   = ${solarKWhVal} kWh/day ÷ ${theta2Val} hrs = <strong>${solarKWVal} kW</strong><br>
+                   <span style="color:#b07000;font-size:7.5pt">Irr = ${solarIrrVal} W/m² (UAE peak global horizontal) | Sun hrs = ${solarHrsVal} hrs/day</span>`
+                : '<span style="color:#888">Solar heat gain not included</span>'
+              }
+            </td>
+            <td class="td-heat">${n2(rS.qsolar)} kW</td>
+            <td class="td-heat">${n2(rW.qsolar)} kW</td>
+          </tr>
           <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL COOLING LOAD</td><td>${n2(rS.qcTotal)} kW</td><td>${n2(rW.qcTotal)} kW</td></tr>
         </tbody>
       </table>
