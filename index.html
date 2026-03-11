@@ -2348,12 +2348,14 @@ function updateSolarCalc(area) {
     else if (type === 'circular') area = Math.PI * (L/2) * (L/2);
     else area = parseFloat(document.getElementById('customArea').value) || 50;
   }
-  const irr = parseFloat(document.getElementById('solarIrr').value) || 866.56;
-  const hrs = parseFloat(document.getElementById('solarHrs').value) || 6.4;
-  const kWh = area * irr / 1000 * hrs;
-  const kW  = kWh / hrs;
+  const irr   = parseFloat(document.getElementById('solarIrr').value)  || 866.56;
+  const hrs   = parseFloat(document.getElementById('solarHrs').value)  || 6.4;
+  const theta2 = parseFloat(document.getElementById('theta2').value)   || 16;
+  const kWh   = area * irr / 1000 * hrs;
+  // Correct: average cooling load = daily energy ÷ chiller operating hours
+  const kW    = theta2 > 0 ? kWh / theta2 : 0;
   document.getElementById('solarCalcShow').textContent = kWh.toFixed(2) + ' kWh/day';
-  document.getElementById('solarKWShow').textContent   = kW.toFixed(2) + ' kW';
+  document.getElementById('solarKWShow').textContent   = kW.toFixed(2) + ' kW  (÷ ' + theta2 + ' operating hrs)';
 }
 
 // ── MAIN CALCULATION ──
@@ -2395,11 +2397,14 @@ function runCalculation() {
   const theta1 = parseFloat(document.getElementById('theta1').value) || 48;
   const theta2 = parseFloat(document.getElementById('theta2').value) || 16;
 
-  const solarOn = document.getElementById('solarCheck').checked;
-  const irr = parseFloat(document.getElementById('solarIrr').value) || 866.56;
-  const solarHrs = parseFloat(document.getElementById('solarHrs').value) || 6.4;
-  const solarKWh = solarOn ? (area * irr / 1000 * solarHrs) : 0;
-  const solarKW  = solarOn ? (solarKWh / solarHrs) : 0;
+  const solarOn   = document.getElementById('solarCheck').checked;
+  const irr       = parseFloat(document.getElementById('solarIrr').value) || 866.56;
+  const solarHrs  = parseFloat(document.getElementById('solarHrs').value) || 6.4;
+  // Daily solar energy absorbed by pool surface (kWh/day)
+  const solarKWh  = solarOn ? (area * irr / 1000 * solarHrs) : 0;
+  // Average cooling load = daily solar energy spread over chiller operating hours (θ2)
+  // This is the correct basis: chiller must remove this energy during its running hours
+  const solarKW   = (solarOn && theta2 > 0) ? (solarKWh / theta2) : 0;
 
   const calc = (season) => {
     const T1 = parseFloat(document.getElementById('T1' + season[0]).value);
@@ -3305,7 +3310,7 @@ function generatePDF() {
         <thead><tr><th style="width:35%">Parameter</th><th>Formula / Assumption</th><th style="width:18%">Summer</th><th style="width:18%">Winter</th></tr></thead>
         <tbody>
           <tr><td class="td-label">Initial Cooling (q1)</td><td class="td-formula">V × ΔTc × 1163 / θ1 × w</td><td class="td-cool">${n2(rS.q1c)} kW</td><td class="td-cool">${n2(rW.q1c)} kW</td></tr>
-          <tr><td class="td-label">Solar Heat Gain (Q☀)</td><td class="td-formula">A × Irr × Hrs / θ</td><td class="td-heat">${n2(rS.qsolar)} kW</td><td class="td-heat">${n2(rW.qsolar)} kW</td></tr>
+          <tr><td class="td-label">Solar Heat Gain (Q☀)</td><td class="td-formula">(A × Irr × Hrs) ÷ θ2</td><td class="td-heat">${n2(rS.qsolar)} kW</td><td class="td-heat">${n2(rW.qsolar)} kW</td></tr>
           ${results.solarOn ? `
           <tr style="background:#fffce6">
             <td class="td-label" style="color:#7a5c00;font-size:8pt">☀ Solar Assumptions</td>
@@ -3313,8 +3318,9 @@ function generatePDF() {
               Irradiance: <strong>${(results.solarIrr||0).toFixed(1)} W/m²</strong> &nbsp;|&nbsp;
               Exposure: <strong>${(results.solarHrs||0).toFixed(1)} hrs/day</strong> &nbsp;|&nbsp;
               Pool Area: <strong>${n2(results.area)} m²</strong> &nbsp;|&nbsp;
-              Daily Solar Energy: <strong>${(results.solarKWh||0).toFixed(2)} kWh/day</strong> &nbsp;→&nbsp;
-              Continuous Load: <strong>${(results.solarKW||0).toFixed(2)} kW</strong>
+              Daily Solar Energy: <strong>${(results.solarKWh||0).toFixed(2)} kWh/day</strong> &nbsp;÷&nbsp;
+              Chiller Operating Hours: <strong>${rS.theta2} hrs/day</strong> &nbsp;=&nbsp;
+              Avg. Cooling Load: <strong>${(results.solarKW||0).toFixed(2)} kW</strong>
             </td>
           </tr>` : ''}
           <tr class="tr-total"><td colspan="2" style="font-size:9.5pt;letter-spacing:0.3px">TOTAL COOLING LOAD</td><td>${n2(rS.qcTotal)} kW</td><td>${n2(rW.qcTotal)} kW</td></tr>
